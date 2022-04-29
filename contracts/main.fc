@@ -1,0 +1,111 @@
+;; =============== Constants =============================
+
+;; Operations
+int op::increment() asm "1 PUSHINT";
+int op::deposit() asm "2 PUSHINT";
+int op::withdraw() asm "3 PUSHINT";
+int op::transfer_ownership() asm "4 PUSHINT";
+
+;; Errors
+int error::access_denied() asm "0xfffffffe PUSHINT";
+int error::unknown_op() asm "0xffffffff PUSHINT";
+int error::insufficient_balance() asm "101 PUSHINT";
+
+;; Other
+int const::min_tons_for_storage() asm "10000000 PUSHINT"; ;; 0.01 TON
+
+;; =============== Storage =============================
+
+;; Storage TL-B scheme:
+;; storage#_ owner_address:MsgAddress counter:uint64
+
+(slice, int) load_data() inline {
+  var ds = get_data().begin_parse();
+  return (
+    ds~load_msg_addr(), ;; owner_address
+    ds~load_uint(64)    ;; counter
+  );
+}
+
+() save_data(slice owner_address, int counter) impure inline {
+  set_data(begin_cell()
+    .store_slice(owner_address)
+    .store_uint(counter, 64)
+    .end_cell());
+}
+
+;; =============== Messages =============================
+
+() op_withdraw(int withdraw_amount, slice owner_address);
+
+() recv_internal(int msg_value, cell in_msg_cell, slice in_msg) impure {
+  ;; parse incoming internal message
+  slice cs = in_msg_cell.begin_parse();
+  int flags = cs~load_uint(4); ;; int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool
+  slice sender_address = cs~load_msg_addr();
+
+  ;; handle bounced messages
+  if (flags & 1) {
+    return (); ;; ignore
+  }
+
+  ;; load from contract storage
+  var (owner_address, counter) = load_data();
+
+  ;; handle operations
+  int op = in_msg~load_uint(32);
+  int query_id = in_msg~load_uint(64);
+  
+  if (op == op::increment()) {
+    save_data(owner_address, counter + 1);
+    return ();
+  }
+
+  if (op == op::deposit()) {
+    return ();
+  }
+  
+  if (op == op::withdraw()) {
+    throw_unless(error::access_denied(), equal_slices(sender_address, owner_address));
+    int withdraw_amount = in_msg~load_uint(256);
+    op_withdraw(withdraw_amount, owner_address);
+    return ();
+  }
+
+  if (op == op::transfer_ownership()) {
+    throw_unless(error::access_denied(), equal_slices(sender_address, owner_address));
+    slice new_owner_address = in_msg~load_msg_addr();
+    save_data(new_owner_address, counter);
+    return ();
+  }
+
+  throw(error::unknown_op());
+}
+
+() op_withdraw(int withdraw_amount, slice owner_address) {
+  var [balance, _] = get_balance();
+  throw_unless(error::insufficient_balance(), balance >= withdraw_amount);
+  int return_value = min(withdraw_amount, balance - const::min_tons_for_storage());
+  send_grams(owner_address, return_value);
+}
+
+;; =============== Getters =============================
+
+int meaning_of_life() method_id {
+  return 42;
+}
+
+slice owner_address() method_id {
+  var (owner_address, _) = load_data();
+  return owner_address;
+}
+
+int counter() method_id {
+  var (_, counter) = load_data();
+  return counter;
+}
+
+int balance() method_id {
+  var [balance, _] = get_balance();
+  return balance;
+}
