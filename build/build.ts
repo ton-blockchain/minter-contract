@@ -2,7 +2,7 @@
 // It assumes that it is running from the repo root, and the directories are organized this way:
 //  ./build/ - directory for build artifacts exists
 //  ./contracts/*.fc - root contracts that are deployed separately are here
-//  ./contracts/lib/*.fc - utility code that should be imported as compilation dependency is here
+//  ./contracts/imports/*.fc - utility code that should be imported as compilation dependency is here
 
 import * as fs from "fs";
 import * as path from "path";
@@ -43,7 +43,7 @@ for (const rootContract of rootContracts) {
 
   // create one string with all source code from all merged files
   let sourceToCompile = "";
-  const importFiles = fg.sync(["contracts/lib/**/*.fc", "contracts/lib/**/*.func"]);
+  const importFiles = fg.sync(["contracts/imports/**/*.fc", "contracts/imports/**/*.func"]);
   for (const importFile of importFiles) {
     console.log(` - Adding import '${importFile}'`);
     sourceToCompile += `${fs.readFileSync(importFile).toString()}\n`;
