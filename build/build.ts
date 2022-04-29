@@ -30,9 +30,15 @@ for (const rootContract of rootContracts) {
   const contractName = path.parse(rootContract).name;
 
   // delete existing build artifacts
-  if (fs.existsSync(`build/${contractName}.fif`)) {
-    console.log(` - Deleting old build artifact 'build/${contractName}.fif'`);
-    fs.unlinkSync(`build/${contractName}.fif`);
+  const fiftArtifact = `build/${contractName}.fif`;
+  if (fs.existsSync(fiftArtifact)) {
+    console.log(` - Deleting old build artifact '${fiftArtifact}'`);
+    fs.unlinkSync(fiftArtifact);
+  }
+  const mergedFuncArtifact = `build/${contractName}.merged.fc`;
+  if (fs.existsSync(mergedFuncArtifact)) {
+    console.log(` - Deleting old build artifact '${mergedFuncArtifact}'`);
+    fs.unlinkSync(mergedFuncArtifact);
   }
 
   // create one string with all source code from all merged files
@@ -44,13 +50,12 @@ for (const rootContract of rootContracts) {
   }
   console.log(` - Adding the contract itself '${rootContract}'`);
   sourceToCompile += `${fs.readFileSync(rootContract).toString()}\n`;
-
-  // debug - uncomment the next line if you can't understand weird compilation errors
-  // fs.writeFileSync(`build/${contractName}.merged.fc`, sourceToCompile);
+  fs.writeFileSync(mergedFuncArtifact, sourceToCompile);
+  console.log(` - Build artifact created '${mergedFuncArtifact}'`);
 
   // run the compiler
-  console.log(` - Trying to compile with 'func' compiler..`);
-  const buildErrors = child_process.execSync(`func -APSI -o build/${contractName}.fif 2>&1`, { input: sourceToCompile }).toString();
+  console.log(` - Trying to compile '${mergedFuncArtifact}' with 'func' compiler..`);
+  const buildErrors = child_process.execSync(`func -APS -o build/${contractName}.fif ${mergedFuncArtifact} 2>&1`).toString();
   if (buildErrors.length > 0) {
     console.log(` - OH NO! Compilation Errors! The compiler output was:`);
     console.log(`\n${buildErrors}`);
