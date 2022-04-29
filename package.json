@@ -5,14 +5,15 @@
   "license": "MIT",
   "author": "",
   "scripts": {
-    "prettier": "npx prettier --write '{test,contracts}/**/*.{ts,js,json}'",
-    "build": "cd build && ./build.sh",
+    "prettier": "npx prettier --write '{test,contracts,build}/**/*.{ts,js,json}'",
+    "build": "ts-node ./build/build.ts",
     "test": "mocha test/**/*.spec.ts"
   },
   "devDependencies": {
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.0.0",
     "chai": "^4.3.4",
+    "fast-glob": "^3.2.11",
     "mocha": "^9.1.3",
     "prettier": "^2.6.2",
     "ts-node": "^10.4.0",
@@ -22,6 +23,9 @@
     "printWidth": 180
   },
   "mocha": {
-    "require": ["chai", "ts-node/register"]
+    "require": [
+      "chai",
+      "ts-node/register"
+    ]
   }
 }

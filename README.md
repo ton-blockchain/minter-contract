@@ -50,6 +50,8 @@ To setup your machine for development, please make sure you have the following:
 
 * Develop
   * FunC contracts are located in `contracts/*.fc`
+    * Standalone root contracts are located in `contracts/*.fc` and imported utility code in `contracts/lib/*.fc`
+    * This structure assists with build and deployment and assumed by the included scripts
   * Tests are located in `test/*.spec.ts`
 
 * Build
