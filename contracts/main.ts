@@ -12,3 +12,9 @@ export function createCode() {
 export function createData(params: { ownerAddress: Address; counter: number }) {
   return beginCell().storeAddress(params.ownerAddress).storeUint(params.counter, 64).endCell();
 }
+
+// message generators for all ops
+
+export function op_increment() {
+  return beginCell().storeUint(1, 32).storeUint(0, 64).endCell();
+}
