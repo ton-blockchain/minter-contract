@@ -39,6 +39,10 @@ To setup your machine for development, please make sure you have the following:
 * The `func` CLI tool (FunC compiler)
   * Installation instructions can be found [here](https://github.com/ton-defi-org/ton-binaries)
   * Run in terminal `func -V` to verify your installation
+* The `fift` CLI tool
+  * Installation instructions can be found [here](https://github.com/ton-defi-org/ton-binaries)
+  * Don't forget to set the `FIFTPATH` env variable as part of the installation above
+  * Run in terminal `fift -V` and `fift` to verify your installation
 * A decent IDE with FunC and TypeScript support
   * We recommend using [Visual Studio Code](https://code.visualstudio.com/) with the [FunC plugin](https://marketplace.visualstudio.com/items?itemName=tonwhales.func-vscode) installed
 
