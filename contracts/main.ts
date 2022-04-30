@@ -8,7 +8,7 @@ export function createCode() {
   return Cell.fromBoc(fs.readFileSync(__dirname + "/../build/main.cell"))[0];
 }
 
-// returns contract storage cell according to save_data() contract method
+// returns contract data cell (storage) according to save_data() contract method
 export function createData(params: { ownerAddress: Address; counter: number }) {
   return beginCell().storeAddress(params.ownerAddress).storeUint(params.counter, 64).endCell();
 }
