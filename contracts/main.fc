@@ -21,7 +21,7 @@
 
 ;; message binary format is defined as TL-B in companion .tlb file
 
-() op_withdraw(int withdraw_amount, slice owner_address);
+() op_withdraw(int withdraw_amount, slice owner_address) impure;
 
 () recv_internal(int msg_value, cell in_msg, slice in_msg_body) impure {
   ;; parse incoming internal message
@@ -48,6 +48,7 @@
 
   if (op == op::deposit()) {
     ;; empty since ton received (msg_value) is added automatically to contract balance
+    ;; ~dump msg_value; ;; an example of debug output, requires running contract in debug mode
     return ();
   }
   
@@ -68,7 +69,7 @@
   throw(error::unknown_op());
 }
 
-() op_withdraw(int withdraw_amount, slice owner_address) {
+() op_withdraw(int withdraw_amount, slice owner_address) impure {
   var [balance, _] = get_balance();
   throw_unless(error::insufficient_balance(), balance >= withdraw_amount);
   int return_value = min(withdraw_amount, balance - const::min_tons_for_storage());
