@@ -1,6 +1,6 @@
 () send_grams(slice address, int amount) impure {
   cell msg = begin_cell()
-    .store_uint (0x18, 6)
+    .store_uint (0x18, 6) ;; bounce
     .store_slice(address) ;; 267 bit address
     .store_grams(amount)
     .store_uint(0, 107) ;; 106 zeroes +  0 as an indicator that there is no cell with the data

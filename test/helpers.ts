@@ -4,19 +4,19 @@ import Prando from "prando";
 
 export const zeroAddress = new Address(0, Buffer.alloc(32, 0));
 
-export function randomAddress(workchain: number, seed: string) {
+export function randomAddress(seed: string, workchain?: number) {
   const random = new Prando(seed);
   const hash = Buffer.alloc(32);
   for (let i = 0; i < hash.length; i++) {
     hash[i] = random.nextInt(0, 255);
   }
-  return new Address(workchain, hash);
+  return new Address(workchain ?? 0, hash);
 }
 
 export function internalMessage(params: { from?: Address; to?: Address; value?: BN; bounce?: boolean; body?: Cell }) {
   const message = params.body ? new CellMessage(params.body) : undefined;
   return new InternalMessage({
-    from: params.from ?? randomAddress(0, "seed"),
+    from: params.from ?? randomAddress("seed"),
     to: params.to ?? zeroAddress,
     value: params.value ?? 0,
     bounce: params.bounce ?? true,

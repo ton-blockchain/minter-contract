@@ -1,23 +1,6 @@
-;; =============== Constants =============================
+;; =============== storage =============================
 
-;; Operations
-int op::increment() asm "1 PUSHINT";
-int op::deposit() asm "2 PUSHINT";
-int op::withdraw() asm "3 PUSHINT";
-int op::transfer_ownership() asm "4 PUSHINT";
-
-;; Errors
-int error::access_denied() asm "0xfffffffe PUSHINT";
-int error::unknown_op() asm "0xffffffff PUSHINT";
-int error::insufficient_balance() asm "101 PUSHINT";
-
-;; Other
-int const::min_tons_for_storage() asm "10000000 PUSHINT"; ;; 0.01 TON
-
-;; =============== Storage =============================
-
-;; Storage TL-B scheme:
-;; storage#_ owner_address:MsgAddress counter:uint64
+;; storage binary format is defined as TL-B in companion .tlb file
 
 (slice, int) load_data() inline {
   var ds = get_data().begin_parse();
@@ -34,13 +17,15 @@ int const::min_tons_for_storage() asm "10000000 PUSHINT"; ;; 0.01 TON
     .end_cell());
 }
 
-;; =============== Messages =============================
+;; =============== messages =============================
+
+;; message binary format is defined as TL-B in companion .tlb file
 
 () op_withdraw(int withdraw_amount, slice owner_address);
 
-() recv_internal(int msg_value, cell in_msg_cell, slice in_msg) impure {
+() recv_internal(int msg_value, cell in_msg, slice in_msg_body) impure {
   ;; parse incoming internal message
-  slice cs = in_msg_cell.begin_parse();
+  slice cs = in_msg.begin_parse();
   int flags = cs~load_uint(4); ;; int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool
   slice sender_address = cs~load_msg_addr();
 
@@ -53,8 +38,8 @@ int const::min_tons_for_storage() asm "10000000 PUSHINT"; ;; 0.01 TON
   var (owner_address, counter) = load_data();
 
   ;; handle operations
-  int op = in_msg~load_uint(32);
-  int query_id = in_msg~load_uint(64);
+  int op = in_msg_body~load_uint(32);
+  int query_id = in_msg_body~load_uint(64);
   
   if (op == op::increment()) {
     save_data(owner_address, counter + 1);
@@ -62,19 +47,20 @@ int const::min_tons_for_storage() asm "10000000 PUSHINT"; ;; 0.01 TON
   }
 
   if (op == op::deposit()) {
+    ;; empty since ton received (msg_value) is added automatically to contract balance
     return ();
   }
   
   if (op == op::withdraw()) {
     throw_unless(error::access_denied(), equal_slices(sender_address, owner_address));
-    int withdraw_amount = in_msg~load_uint(256);
+    int withdraw_amount = in_msg_body~load_coins();
     op_withdraw(withdraw_amount, owner_address);
     return ();
   }
 
   if (op == op::transfer_ownership()) {
     throw_unless(error::access_denied(), equal_slices(sender_address, owner_address));
-    slice new_owner_address = in_msg~load_msg_addr();
+    slice new_owner_address = in_msg_body~load_msg_addr();
     save_data(new_owner_address, counter);
     return ();
   }
@@ -89,7 +75,7 @@ int const::min_tons_for_storage() asm "10000000 PUSHINT"; ;; 0.01 TON
   send_grams(owner_address, return_value);
 }
 
-;; =============== Getters =============================
+;; =============== getters =============================
 
 int meaning_of_life() method_id {
   return 42;

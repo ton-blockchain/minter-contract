@@ -2,13 +2,15 @@
 // It assumes that it is running from the repo root, and the directories are organized this way:
 //  ./build/ - directory for build artifacts exists
 //  ./contracts/*.fc - root contracts that are deployed separately are here
-//  ./contracts/imports/*.fc - utility code that should be imported as compilation dependency is here
+//  ./contracts/imports/*.fc - shared utility code that should be imported as compilation dependency is here
+// if you need imports that are dedicated to one contract and aren't shared, place them in a directory with the contract name:
+//  ./contracts/import/mycontract/*.fc
 
 import fs from "fs";
 import path from "path";
 import process from "process";
 import child_process from "child_process";
-import fg from "fast-glob";
+import glob from "fast-glob";
 
 console.log(`=================================================================`);
 console.log(`Build script running, let's find some FunC contracts to compile..`);
@@ -33,7 +35,7 @@ if (!fiftVersion.includes(`Fift build information`)) {
   process.exit(1);
 }
 
-const rootContracts = fg.sync(["contracts/*.fc", "contracts/*.func"]);
+const rootContracts = glob.sync(["contracts/*.fc", "contracts/*.func"]);
 for (const rootContract of rootContracts) {
   // compile a new root contract
   console.log(`\n* Found root contract '${rootContract}' - let's compile it:`);
@@ -61,9 +63,25 @@ for (const rootContract of rootContracts) {
     fs.unlinkSync(cellArtifact);
   }
 
+  // check if we have a tlb file
+  const tlbFile = `contracts/${contractName}.tlb`;
+  if (fs.existsSync(tlbFile)) {
+    console.log(` - TL-B file '${tlbFile}' found, calculating crc32 on all ops..`);
+    const tlbContent = fs.readFileSync(tlbFile).toString();
+    const tlbOpMessages = tlbContent.match(/^(\w+).*=\s*InternalMsgBody$/gm) ?? [];
+    for (const tlbOpMessage of tlbOpMessages) {
+      const crc = crc32(tlbOpMessage);
+      const asQuery = `0x${(crc & 0x7fffffff).toString(16)}`;
+      const asResponse = `0x${((crc | 0x80000000) >>> 0).toString(16)}`;
+      console.log(`   op '${tlbOpMessage.split(" ")[0]}': '${asQuery}' as query (&0x7fffffff), '${asResponse}' as response (|0x80000000)`);
+    }
+  } else {
+    console.log(` - Warning: TL-B file for contract '${tlbFile}' not found, are your op consts according to standard?`);
+  }
+
   // create a merged fc file with source code from all dependencies
   let sourceToCompile = "";
-  const importFiles = fg.sync(["contracts/imports/**/*.fc", "contracts/imports/**/*.func"]);
+  const importFiles = glob.sync([`contracts/imports/*.fc`, `contracts/imports/*.func`, `contracts/imports/${contractName}/*.fc`, `contracts/imports/${contractName}/*.func`]);
   for (const importFile of importFiles) {
     console.log(` - Adding import '${importFile}'`);
     sourceToCompile += `${fs.readFileSync(importFile).toString()}\n`;
@@ -117,3 +135,15 @@ for (const rootContract of rootContracts) {
 }
 
 console.log(``);
+
+// helpers
+
+function crc32(r: string) {
+  for (var a, o = [], c = 0; c < 256; c++) {
+    a = c;
+    for (var f = 0; f < 8; f++) a = 1 & a ? 3988292384 ^ (a >>> 1) : a >>> 1;
+    o[c] = a;
+  }
+  for (var n = -1, t = 0; t < r.length; t++) n = (n >>> 8) ^ o[255 & (n ^ r.charCodeAt(t))];
+  return (-1 ^ n) >>> 0;
+}

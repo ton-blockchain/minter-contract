@@ -3,18 +3,20 @@ import chaiBN from "chai-bn";
 import BN from "bn.js";
 chai.use(chaiBN(BN));
 
+import * as fs from "fs";
+import { Cell } from "ton";
 import { SmartContract } from "ton-contract-executor";
-import { createCode, createData, op_increment } from "../contracts/main";
-import { internalMessage, randomAddress } from "./utils";
+import * as main from "../contracts/main";
+import { internalMessage, randomAddress } from "./helpers";
 
 describe("Counter tests", () => {
   let contract: SmartContract;
 
   beforeEach(async () => {
     contract = await SmartContract.fromCell(
-      createCode(),
-      createData({
-        ownerAddress: randomAddress(0, "owner"),
+      Cell.fromBoc(fs.readFileSync("build/main.cell"))[0], // code cell from build output
+      main.data({
+        ownerAddress: randomAddress("owner"),
         counter: 17,
       })
     );
@@ -31,8 +33,8 @@ describe("Counter tests", () => {
 
     const send = await contract.sendInternalMessage(
       internalMessage({
-        from: randomAddress(0, "notowner"),
-        body: op_increment(),
+        from: randomAddress("notowner"),
+        body: main.increment(),
       })
     );
     expect(send.type).to.equal("success");

@@ -55,9 +55,12 @@ To setup your machine for development, please make sure you have the following:
 * Develop
   * FunC contracts are located in `contracts/*.fc`
     * Standalone root contracts are located in `contracts/*.fc`
-    * Imported utility code (when breaking code to multiple files) in `contracts/imports/*.fc`
-    * This structure assists with build and deployment and assumed by the included scripts
-  * Tests are located in `test/*.spec.ts`
+    * Shared imports (when breaking code to multiple files) are in `contracts/imports/*.fc`
+    * Contract-specific imports that aren't shared are in `contracts/imports/mycontract/*.fc`
+  * Each contract may have optional but recommended auxiliary files:
+    * [TL-B](https://ton.org/docs/#/overviews/TL-B) file defining the encoding of its data and message ops in `contracts/mycontract.tld`
+    * TypeScript file that implements the encoding of its data and message ops in `contracts/mycontract.ts`
+  * Tests in TypeScript are located in `test/*.spec.ts`
 
 * Build
   * In the root repo dir, run in terminal `npm run build`
