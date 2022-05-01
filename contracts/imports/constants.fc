@@ -5,9 +5,9 @@ int op::withdraw() asm "0x41836980 PUSHINT";
 int op::transfer_ownership() asm "0x2da38aaf PUSHINT";
 
 ;; errors
-int error::access_denied() asm "0xfffffffe PUSHINT";
-int error::unknown_op() asm "0xffffffff PUSHINT";
-int error::insufficient_balance() asm "101 PUSHINT";
+int error::unknown_op() asm "101 PUSHINT";
+int error::access_denied() asm "102 PUSHINT";
+int error::insufficient_balance() asm "103 PUSHINT";
 
 ;; other
 int const::min_tons_for_storage() asm "10000000 PUSHINT"; ;; 0.01 TON
