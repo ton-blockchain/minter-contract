@@ -16,7 +16,7 @@ export function randomAddress(seed: string, workchain?: number) {
 export function internalMessage(params: { from?: Address; to?: Address; value?: BN; bounce?: boolean; body?: Cell }) {
   const message = params.body ? new CellMessage(params.body) : undefined;
   return new InternalMessage({
-    from: params.from ?? randomAddress("seed"),
+    from: params.from ?? randomAddress("sender"),
     to: params.to ?? zeroAddress,
     value: params.value ?? 0,
     bounce: params.bounce ?? true,
