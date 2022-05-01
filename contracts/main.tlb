@@ -1,6 +1,6 @@
 // base types defined in https://github.com/newton-blockchain/ton/blob/master/crypto/block/block.tlb
 
-// storage
+// storage (according to save_data() contract method)
 
 storage#_ owner_address:MsgAddress counter:uint64
 
