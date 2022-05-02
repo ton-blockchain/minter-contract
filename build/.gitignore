@@ -1,3 +1,4 @@
 *.fif
 *.fc
 *.cell
+deploy.config.json

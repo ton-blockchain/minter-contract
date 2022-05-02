@@ -14,7 +14,6 @@ This project is part of a set of 3 typical repositories needed for a blockchain 
 
 * `contracts/*.fc` - Smart contracts for TON blockchain written in [FunC](https://ton.org/docs/#/func) language
 * `build/build.ts` - Build script to compile the FunC code to [Fift](https://ton-blockchain.github.io/docs/fiftbase.pdf)
-* `build/*.fif` - Output Fift files for every contract that was compiled, not uploaded to git
 * `build/deploy.ts` - Deploy script to deploy the compiled code to TON mainnet
 * `test/*.spec.ts` - Test suite for the contracts running on [Mocha](https://mochajs.org/) test runner
 
@@ -65,11 +64,18 @@ To setup your machine for development, please make sure you have the following:
 * Build
   * In the root repo dir, run in terminal `npm run build`
   * Compilation errors will appear on screen
+  * Resulting build artifacts include:
+    * `mycontract.merged.fc` - merged and flattened FunC source code with all imports
+    * `mycontract.fif` - Fift file result of compilation (not very useful by itself)
+    * `mycontract.cell` - the binary code cell of the compiled contract (for deployment)
 
 * Test
   * In the root repo dir, run in terminal `npm run test`
-  * Make sure to build before running tests
+  * Don't forget to build (or rebuild) before running tests
+  * Tests are running inside Node.js by running TVM in web-assembly using `ton-contract-executor`
 
 * Deploy
   * In the root repo dir, run in terminal `npm run deploy`
   * Follow the on-screen instructions to deploy to mainnet
+    * Each contract to deploy should have a script `build/mycontract.deploy.ts` to return its init data cell
+    * The deployment wallet is configured in `build/deploy.config.json` (file will be created if not found)
