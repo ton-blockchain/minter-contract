@@ -75,7 +75,10 @@ To setup your machine for development, please make sure you have the following:
   * Tests are running inside Node.js by running TVM in web-assembly using `ton-contract-executor`
 
 * Deploy
-  * In the root repo dir, run in terminal `npm run deploy`
-  * Follow the on-screen instructions to deploy to mainnet
+  * Make sure all contracts are built and your setup is ready to deploy:
     * Each contract to deploy should have a script `build/mycontract.deploy.ts` to return its init data cell
-    * The deployment wallet is configured in `build/deploy.config.json` (file will be created if not found)
+    * The deployment wallet is configured in `build/deploy.config.json` (it will be created if not found)
+  * To deploy to mainnet (production), run in terminal `npm run deploy`
+    * To deploy to testnet instead (where TON is free), run `npm run deploy:testnet`
+    * Follow the on-screen instructions of the deploy script
+  

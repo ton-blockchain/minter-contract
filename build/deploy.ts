@@ -48,11 +48,13 @@ async function main() {
   const client = new TonClient({ endpoint: `https://${process.env.TESTNET ? "testnet." : ""}toncenter.com/api/v2/jsonRPC` });
   const walletKey = await mnemonicToWalletKey(deployerMnemonic.split(" "));
   const walletContract = WalletContract.create(client, WalletV3R2Source.create({ publicKey: walletKey.publicKey, workchain: 0 }));
-  console.log(` - Wallet address used for deployment is: ${walletContract.address.toFriendly()}`);
+  console.log(` - Wallet address used to deploy from is: ${walletContract.address.toFriendly()}`);
   const walletBalance = await client.getBalance(walletContract.address);
-  if (walletBalance.lt(toNano(1))) {
-    console.log(` - ERROR: Wallet has less than 1 TON for gas (${fromNano(walletBalance)} TON), please send some TON for gas first`);
+  if (walletBalance.lt(toNano(0.2))) {
+    console.log(` - ERROR: Wallet has less than 0.2 TON for gas (${fromNano(walletBalance)} TON), please send some TON for gas first`);
     process.exit(1);
+  } else {
+    console.log(` - Wallet balance is ${fromNano(walletBalance)} TON, which will be used for gas`);
   }
 
   // go over all the contracts we have deploy scripts for
@@ -102,7 +104,7 @@ async function main() {
       sendMode: SendMode.PAY_GAS_SEPARATLY + SendMode.IGNORE_ERRORS,
       order: new InternalMessage({
         to: newContractAddress,
-        value: toNano(0.1),
+        value: toNano(0.02), // this will almost in full be the balance of the new contract and allow it to pay rent
         bounce: false,
         body: new CommonMessageInfo({
           stateInit: new StateInit({ data: initDataCell, code: initCodeCell }),
@@ -114,13 +116,16 @@ async function main() {
     console.log(` - Deploy transaction sent successfully`);
 
     // make sure that the contract was deployed
-    console.log(` - Waiting 5 seconds to check if the contract was actually deployed..`);
-    await sleep(5000);
+    console.log(` - Waiting 10 seconds to check if the contract was actually deployed..`);
+    await sleep(10000);
     if (await client.isContractDeployed(newContractAddress)) {
       console.log(` - SUCCESS! Contract deployed successfully to address: ${newContractAddress.toFriendly()}`);
+      const contractBalance = await client.getBalance(newContractAddress);
+      console.log(` - New contract balance is now ${fromNano(contractBalance)} TON, make sure it has enough to pay rent`);
     } else {
       console.log(` - FAILURE! Contract address still looks uninitialized: ${newContractAddress.toFriendly()}`);
     }
+    console.log(` - Block explorer link: https://${process.env.TESTNET ? "test." : ""}tonwhales.com/explorer/address/${newContractAddress.toFriendly()}`);
   }
 
   console.log(``);
