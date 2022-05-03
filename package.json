@@ -8,12 +8,14 @@
     "prettier": "npx prettier --write '{test,contracts,build}/**/*.{ts,js,json}'",
     "test": "mocha --exit test/**/*.spec.ts",
     "build": "ts-node ./build/build.ts",
-    "deploy": "ts-node ./build/deploy.ts"
+    "deploy": "ts-node ./build/deploy.ts",
+    "deploy:testnet": "export TESTNET=1 && ts-node ./build/deploy.ts"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.0.0",
+    "axios-request-throttle": "^1.0.0",
     "chai": "^4.3.4",
     "chai-bn": "^0.3.1",
     "fast-glob": "^3.2.11",

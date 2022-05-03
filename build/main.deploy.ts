@@ -8,3 +8,8 @@ export function initData() {
     counter: 0,
   });
 }
+
+// return the op that should be sent to the contract on deployment, can be "null" so send an empty message
+export function initMessage() {
+  return main.increment();
+}
