@@ -14,7 +14,6 @@ import glob from "fast-glob";
 import { Address, Cell, CellMessage, CommonMessageInfo, fromNano, InternalMessage, StateInit, toNano } from "ton";
 import { TonClient, WalletContract, WalletV3R2Source, contractAddress, SendMode } from "ton";
 import { mnemonicNew, mnemonicToWalletKey } from "ton-crypto";
-import { postDeployTest } from "./main.deploy";
 
 async function main() {
   console.log(`=================================================================`);
@@ -68,7 +67,7 @@ async function main() {
   const rootContracts = glob.sync(["build/*.deploy.ts"]);
   for (const rootContract of rootContracts) {
     // deploy a new root contract
-    console.log(`\n* Found root contract to deploy '${rootContract}':`);
+    console.log(`\n* Found root contract '${rootContract} - let's deploy it':`);
     const contractName = path.parse(path.parse(rootContract).name).name;
 
     // prepare the init data cell
@@ -158,5 +157,5 @@ async function performPostDeploymentTest(rootContract: string, deployInitScript:
     return;
   }
   console.log(` - Running a post deployment test:`);
-  await postDeployTest(walletContract, secretKey, newContractAddress);
+  await deployInitScript.postDeployTest(walletContract, secretKey, newContractAddress);
 }
