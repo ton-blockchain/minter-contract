@@ -11,19 +11,27 @@ axiosThrottle.use(axios, { requestsPerSecond: 0.5 }); // required since toncente
 import fs from "fs";
 import path from "path";
 import glob from "fast-glob";
-import { Cell, CellMessage, CommonMessageInfo, contractAddress, fromNano, InternalMessage, SendMode, StateInit, toNano, TonClient, WalletContract, WalletV3R2Source } from "ton";
+import { Address, Cell, CellMessage, CommonMessageInfo, fromNano, InternalMessage, StateInit, toNano } from "ton";
+import { TonClient, WalletContract, WalletV3R2Source, contractAddress, SendMode } from "ton";
 import { mnemonicNew, mnemonicToWalletKey } from "ton-crypto";
+import { postDeployTest } from "./main.deploy";
 
 async function main() {
   console.log(`=================================================================`);
   console.log(`Deploy script running, let's find some contracts to deploy..`);
 
-  // check some global settings
+  // check input arguments (given through environment variables)
   if (process.env.TESTNET) {
-    console.log(`\n* We are deploying to 'testnet' (https://t.me/testgiver_ton_bot will give you test TON)`);
+    console.log(`\n* We are working with 'testnet' (https://t.me/testgiver_ton_bot will give you test TON)`);
   } else {
-    console.log(`\n* We are deploying to 'mainnet'`);
+    console.log(`\n* We are working with 'mainnet'`);
   }
+
+  // initialize globals
+  const client = new TonClient({ endpoint: `https://${process.env.TESTNET ? "testnet." : ""}toncenter.com/api/v2/jsonRPC` });
+  const deployerWalletType = "org.ton.wallets.v3.r2"; // see WalletV3R2Source class used below
+  const newContractFunding = toNano(0.02); // this will be (almost in full) the balance of a new deployed contract and allow it to pay rent
+  const workchain = 0; // normally 0, only special contracts should be deployed to masterchain (-1)
 
   // make sure we have a wallet mnemonic to deploy from (or create one if not found)
   const deployConfigJson = `build/deploy.config.json`;
@@ -31,7 +39,7 @@ async function main() {
   if (!fs.existsSync(deployConfigJson)) {
     console.log(`\n* Config file '${deployConfigJson}' not found, creating a new wallet for deploy..`);
     deployerMnemonic = (await mnemonicNew(24)).join(" ");
-    const deployWalletJsonContent = { created: new Date().toISOString(), deployerMnemonic };
+    const deployWalletJsonContent = { created: new Date().toISOString(), deployerWalletType, deployerMnemonic };
     fs.writeFileSync(deployConfigJson, JSON.stringify(deployWalletJsonContent, null, 2));
     console.log(` - Created new wallet in '${deployConfigJson}' - keep this file secret!`);
   } else {
@@ -45,9 +53,8 @@ async function main() {
   }
 
   // open the wallet and make sure it has enough TON
-  const client = new TonClient({ endpoint: `https://${process.env.TESTNET ? "testnet." : ""}toncenter.com/api/v2/jsonRPC` });
   const walletKey = await mnemonicToWalletKey(deployerMnemonic.split(" "));
-  const walletContract = WalletContract.create(client, WalletV3R2Source.create({ publicKey: walletKey.publicKey, workchain: 0 }));
+  const walletContract = WalletContract.create(client, WalletV3R2Source.create({ publicKey: walletKey.publicKey, workchain }));
   console.log(` - Wallet address used to deploy from is: ${walletContract.address.toFriendly()}`);
   const walletBalance = await client.getBalance(walletContract.address);
   if (walletBalance.lt(toNano(0.2))) {
@@ -65,19 +72,19 @@ async function main() {
     const contractName = path.parse(path.parse(rootContract).name).name;
 
     // prepare the init data cell
-    const deployInit = require(__dirname + "/../" + rootContract);
-    if (typeof deployInit.initData !== "function") {
+    const deployInitScript = require(__dirname + "/../" + rootContract);
+    if (typeof deployInitScript.initData !== "function") {
       console.log(` - ERROR: '${rootContract}' does not have 'initData()' function`);
       process.exit(1);
     }
-    const initDataCell = deployInit.initData() as Cell;
+    const initDataCell = deployInitScript.initData() as Cell;
 
     // prepare the init message
-    if (typeof deployInit.initMessage !== "function") {
+    if (typeof deployInitScript.initMessage !== "function") {
       console.log(` - ERROR: '${rootContract}' does not have 'initMessage()' function`);
       process.exit(1);
     }
-    const initMessageCell = deployInit.initMessage() as Cell | null;
+    const initMessageCell = deployInitScript.initMessage() as Cell | null;
 
     // prepare the init code cell
     const cellArtifact = `build/${contractName}.cell`;
@@ -88,10 +95,11 @@ async function main() {
     const initCodeCell = Cell.fromBoc(fs.readFileSync(cellArtifact))[0];
 
     // make sure the contract was not already deployed
-    const newContractAddress = contractAddress({ workchain: 0, initialData: initDataCell, initialCode: initCodeCell });
+    const newContractAddress = contractAddress({ workchain, initialData: initDataCell, initialCode: initCodeCell });
     console.log(` - Based on your init code+data, your new contract address is: ${newContractAddress.toFriendly()}`);
     if (await client.isContractDeployed(newContractAddress)) {
-      console.log(` - Looks like the contract is already deployed in this address, skipping`);
+      console.log(` - Looks like the contract is already deployed in this address, skipping deployment`);
+      await performPostDeploymentTest(rootContract, deployInitScript, walletContract, walletKey.secretKey, newContractAddress);
       continue;
     }
 
@@ -104,7 +112,7 @@ async function main() {
       sendMode: SendMode.PAY_GAS_SEPARATLY + SendMode.IGNORE_ERRORS,
       order: new InternalMessage({
         to: newContractAddress,
-        value: toNano(0.02), // this will almost in full be the balance of the new contract and allow it to pay rent
+        value: newContractFunding,
         bounce: false,
         body: new CommonMessageInfo({
           stateInit: new StateInit({ data: initDataCell, code: initCodeCell }),
@@ -116,16 +124,21 @@ async function main() {
     console.log(` - Deploy transaction sent successfully`);
 
     // make sure that the contract was deployed
-    console.log(` - Waiting 10 seconds to check if the contract was actually deployed..`);
-    await sleep(10000);
+    console.log(` - Block explorer link: https://${process.env.TESTNET ? "test." : ""}tonwhales.com/explorer/address/${newContractAddress.toFriendly()}`);
+    console.log(` - Waiting up to 20 seconds to check if the contract was actually deployed..`);
+    for (let attempt = 0; attempt < 10; attempt++) {
+      await sleep(2000);
+      const seqnoAfter = await walletContract.getSeqNo();
+      if (seqnoAfter > seqno) break;
+    }
     if (await client.isContractDeployed(newContractAddress)) {
       console.log(` - SUCCESS! Contract deployed successfully to address: ${newContractAddress.toFriendly()}`);
       const contractBalance = await client.getBalance(newContractAddress);
       console.log(` - New contract balance is now ${fromNano(contractBalance)} TON, make sure it has enough to pay rent`);
+      await performPostDeploymentTest(rootContract, deployInitScript, walletContract, walletKey.secretKey, newContractAddress);
     } else {
       console.log(` - FAILURE! Contract address still looks uninitialized: ${newContractAddress.toFriendly()}`);
     }
-    console.log(` - Block explorer link: https://${process.env.TESTNET ? "test." : ""}tonwhales.com/explorer/address/${newContractAddress.toFriendly()}`);
   }
 
   console.log(``);
@@ -137,4 +150,13 @@ main();
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function performPostDeploymentTest(rootContract: string, deployInitScript: any, walletContract: WalletContract, secretKey: Buffer, newContractAddress: Address) {
+  if (typeof deployInitScript.postDeployTest !== "function") {
+    console.log(` - Not running a post deployment test, '${rootContract}' does not have 'postDeployTest()' function`);
+    return;
+  }
+  console.log(` - Running a post deployment test:`);
+  await postDeployTest(walletContract, secretKey, newContractAddress);
 }
