@@ -38,7 +38,7 @@ async function main() {
   // make sure we have a wallet mnemonic to deploy from (or create one if not found)
   const deployConfigEnv = ".env";
   let deployerMnemonic;
-  if (!fs.existsSync(deployConfigEnv)) {
+  if (!fs.existsSync(deployConfigEnv) || !process.env.DEPLOYER_MNEMONIC) {
     console.log(`\n* Config file '${deployConfigEnv}' not found, creating a new wallet for deploy..`);
     deployerMnemonic = (await mnemonicNew(24)).join(" ");
     const deployWalletEnvContent = `DEPLOYER_WALLET=${deployerWalletType}\nDEPLOYER_MNEMONIC="${deployerMnemonic}"\n`;
@@ -46,10 +46,6 @@ async function main() {
     console.log(` - Created new wallet in '${deployConfigEnv}' - keep this file secret!`);
   } else {
     console.log(`\n* Config file '${deployConfigEnv}' found and will be used for deployment!`);
-    if (!process.env.DEPLOYER_MNEMONIC) {
-      console.log(` - ERROR: '${deployConfigEnv}' does not contain key 'DEPLOYER_MNEMONIC'`);
-      process.exit(1);
-    }
     deployerMnemonic = process.env.DEPLOYER_MNEMONIC;
   }
 

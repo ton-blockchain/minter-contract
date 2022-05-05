@@ -45,7 +45,13 @@ To setup your local machine for development, please make sure you have the follo
 * A decent IDE with FunC and TypeScript support
   * We recommend using [Visual Studio Code](https://code.visualstudio.com/) with the [FunC plugin](https://marketplace.visualstudio.com/items?itemName=tonwhales.func-vscode) installed
 
-Alternatively, you can ignore the above requirements and develop in your web browser with an online IDE and zero setup. Simply open this repo inside [Glitch](https://glitch.com/) without installing anything.
+Alternatively, you can ignore the above requirements and develop in your web browser with an online IDE and zero setup. Simply open this repo inside [Glitch](https://glitch.com/) without installing anything:
+
+* Open the link: https://glitch.com/edit/#!/remix/tonstarter-contracts
+  * This will create a brand new Glitch project just for you (similar to a git fork)
+  * Edit your contract files and tests in the online IDE
+  * To run terminal commands like `npm run test` click the "TERMINAL" button of the online IDE
+* It's a bit slow.. run on a local machine if you want a much faster experience
 
 ## Development instructions
 

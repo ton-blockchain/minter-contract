@@ -37,6 +37,10 @@
     "require": [
       "chai",
       "ts-node/register"
-    ]
+    ],
+    "timeout": 10000
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
