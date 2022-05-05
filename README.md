@@ -91,6 +91,6 @@ Alternatively, you can ignore the above requirements and develop right inside a 
     * The deployment wallet is configured in `.env` (will be created automatically if not exists), with contents:<br>
       `DEPLOYER_MNEMONIC="mad nation chief flavor ..."`
   * To deploy to mainnet (production), run in terminal `npm run deploy`
-    * To deploy to testnet instead (where TON is free), run `npm run deploy:testnet`
+    * To deploy to testnet instead (where TON coins are free), run `npm run deploy:testnet`
     * Follow the on-screen instructions of the deploy script
   
