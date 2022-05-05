@@ -88,7 +88,7 @@ Alternatively, you can ignore the above requirements and develop right inside a 
 * Deploy
   * Make sure all contracts are built and your setup is ready to deploy:
     * Each contract to deploy should have a script `build/mycontract.deploy.ts` to return its init data cell
-    * The deployment wallet is configured in `.env` (will be created automatically if not exists), with contents:<br>
+    * The deployment wallet is configured in `.env` (created automatically if not exists), with contents:<br>
       `DEPLOYER_MNEMONIC="mad nation chief flavor ..."`
   * To deploy to mainnet (production), run in terminal `npm run deploy`
     * To deploy to testnet instead (where TON coins are free), run `npm run deploy:testnet`
