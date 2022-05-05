@@ -45,22 +45,24 @@ To setup your local machine for development, please make sure you have the follo
 * A decent IDE with FunC and TypeScript support
   * We recommend using [Visual Studio Code](https://code.visualstudio.com/) with the [FunC plugin](https://marketplace.visualstudio.com/items?itemName=tonwhales.func-vscode) installed
 
-Alternatively, you can ignore the above requirements and develop in your web browser with an online IDE and zero setup. Simply open this repo inside [Glitch](https://glitch.com/) without installing anything:
+Once your local machine is ready, install the project:
 
-* Open [this link](https://glitch.com/edit/#!/remix/clone-from-repo?&REPO_URL=https%3A%2F%2Fgithub.com%2Fton-defi-org%2Ftonstarter-contracts.git) in your browser
-  * This will create a brand new Glitch project just for you (similar to a git fork)
-  * Wait about 30 seconds until installation completes (click the "LOGS" button on the bottom of IDE to see progress)
-  * Edit your contract files and tests in the online IDE
-  * To run terminal commands like `npm run build` click the "TERMINAL" button on the bottom of the online IDE
-* It's a bit slow.. run on a local machine if you want a much faster experience!
+* Git clone the repo locally and rename the directory to your own project name
+* In the root repo dir, run in terminal `npm install`
+
+### or.. work online instead
+
+Alternatively, you can ignore the above requirements and develop right inside a web browser with an online IDE and **zero** setup. Simply open this repo inside [Glitch](https://glitch.com/) without installing anything:
+
+* Create your new Glitch workspace by opening [this link](https://glitch.com/edit/#!/remix/clone-from-repo?&REPO_URL=https%3A%2F%2Fgithub.com%2Fton-defi-org%2Ftonstarter-contracts.git) in your browser
+* Wait about 30 seconds until installation completes (click the "LOGS" button on the bottom of the IDE to see progress)
+* Edit your contract files and tests in the online IDE
+* To run terminal commands like `npm run build` click the "TERMINAL" button on the bottom of the online IDE
+* Working online is slow! run on a local machine if you want a much faster experience
 
 ## Development instructions
 
-* Install
-  * Git clone the repo locally and rename the directory to your own project name
-  * In the root repo dir, run in terminal `npm install`
-
-* Develop
+* Write code
   * FunC contracts are located in `contracts/*.fc`
     * Standalone root contracts are located in `contracts/*.fc`
     * Shared imports (when breaking code to multiple files) are in `contracts/imports/*.fc`
