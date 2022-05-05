@@ -30,7 +30,7 @@ Some of the opinionated choices made here include:
 
 ## Dependencies and requirements
 
-To setup your machine for development, please make sure you have the following:
+To setup your local machine for development, please make sure you have the following:
 
 * A modern version of Node.js
   * Installation instructions can be found [here](https://nodejs.org/)
@@ -44,6 +44,8 @@ To setup your machine for development, please make sure you have the following:
   * Run in terminal `fift -V` and `fift` to verify your installation
 * A decent IDE with FunC and TypeScript support
   * We recommend using [Visual Studio Code](https://code.visualstudio.com/) with the [FunC plugin](https://marketplace.visualstudio.com/items?itemName=tonwhales.func-vscode) installed
+
+Alternatively, you can ignore the above requirements and develop in your web browser with an online IDE and zero setup. Simply open this repo inside [Glitch](https://glitch.com/) without installing anything.
 
 ## Development instructions
 
@@ -77,7 +79,8 @@ To setup your machine for development, please make sure you have the following:
 * Deploy
   * Make sure all contracts are built and your setup is ready to deploy:
     * Each contract to deploy should have a script `build/mycontract.deploy.ts` to return its init data cell
-    * The deployment wallet is configured in `build/deploy.config.json` (file will be created if not found)
+    * The deployment wallet is configured in `.env` (will be created automatically if not exists), with contents:<br>
+      `DEPLOYER_MNEMONIC="mad nation chief flavor ..."`
   * To deploy to mainnet (production), run in terminal `npm run deploy`
     * To deploy to testnet instead (where TON is free), run `npm run deploy:testnet`
     * Follow the on-screen instructions of the deploy script

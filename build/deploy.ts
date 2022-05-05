@@ -2,11 +2,14 @@
 // Every contract you want to deploy should have a mycontract.deploy.ts script that returns its init data
 // The script assumes that it is running from the repo root, and the directories are organized this way:
 //  ./build/ - directory for build artifacts (mycontract.cell) and deploy init data scripts (mycontract.deploy.ts)
-//  ./build/deploy.config.json - JSON config file with secret mnemonic of deploying wallet (will be created if not found)
+//  ./.env - config file with DEPLOYER_MNEMONIC - secret mnemonic of deploying wallet (will be created if not found)
 
 import axios from "axios";
 import axiosThrottle from "axios-request-throttle";
 axiosThrottle.use(axios, { requestsPerSecond: 0.5 }); // required since toncenter jsonRPC limits to 1 req/sec without API key
+
+import dotenv from "dotenv";
+dotenv.config();
 
 import fs from "fs";
 import path from "path";
@@ -28,27 +31,26 @@ async function main() {
 
   // initialize globals
   const client = new TonClient({ endpoint: `https://${process.env.TESTNET ? "testnet." : ""}toncenter.com/api/v2/jsonRPC` });
-  const deployerWalletType = "org.ton.wallets.v3.r2"; // see WalletV3R2Source class used below
+  const deployerWalletType = "org.ton.wallets.v3.r2"; // also see WalletV3R2Source class used below
   const newContractFunding = toNano(0.02); // this will be (almost in full) the balance of a new deployed contract and allow it to pay rent
   const workchain = 0; // normally 0, only special contracts should be deployed to masterchain (-1)
 
   // make sure we have a wallet mnemonic to deploy from (or create one if not found)
-  const deployConfigJson = `build/deploy.config.json`;
+  const deployConfigEnv = ".env";
   let deployerMnemonic;
-  if (!fs.existsSync(deployConfigJson)) {
-    console.log(`\n* Config file '${deployConfigJson}' not found, creating a new wallet for deploy..`);
+  if (!fs.existsSync(deployConfigEnv)) {
+    console.log(`\n* Config file '${deployConfigEnv}' not found, creating a new wallet for deploy..`);
     deployerMnemonic = (await mnemonicNew(24)).join(" ");
-    const deployWalletJsonContent = { created: new Date().toISOString(), deployerWalletType, deployerMnemonic };
-    fs.writeFileSync(deployConfigJson, JSON.stringify(deployWalletJsonContent, null, 2));
-    console.log(` - Created new wallet in '${deployConfigJson}' - keep this file secret!`);
+    const deployWalletEnvContent = `DEPLOYER_WALLET=${deployerWalletType}\nDEPLOYER_MNEMONIC="${deployerMnemonic}"\n`;
+    fs.writeFileSync(deployConfigEnv, deployWalletEnvContent);
+    console.log(` - Created new wallet in '${deployConfigEnv}' - keep this file secret!`);
   } else {
-    console.log(`\n* Config file '${deployConfigJson}' found and will be used for deployment!`);
-    const deployConfigJsonContent = require(__dirname + "/../" + deployConfigJson);
-    if (!deployConfigJsonContent.deployerMnemonic) {
-      console.log(` - ERROR: '${deployConfigJson}' does not have the key 'deployerMnemonic'`);
+    console.log(`\n* Config file '${deployConfigEnv}' found and will be used for deployment!`);
+    if (!process.env.DEPLOYER_MNEMONIC) {
+      console.log(` - ERROR: '${deployConfigEnv}' does not contain key 'DEPLOYER_MNEMONIC'`);
       process.exit(1);
     }
-    deployerMnemonic = deployConfigJsonContent.deployerMnemonic;
+    deployerMnemonic = process.env.DEPLOYER_MNEMONIC;
   }
 
   // open the wallet and make sure it has enough TON

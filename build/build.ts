@@ -16,6 +16,12 @@ async function main() {
   console.log(`=================================================================`);
   console.log(`Build script running, let's find some FunC contracts to compile..`);
 
+  // if we have an explicit bin directory, use the executables there (needed for glitch.com)
+  if (fs.existsSync("bin")) {
+    process.env.PATH = __dirname + "/../bin/:" + process.env.PATH;
+    process.env.FIFTPATH = __dirname + "/../bin/fiftlib";
+  }
+
   // make sure func compiler is available
   let funcVersion = "";
   try {
