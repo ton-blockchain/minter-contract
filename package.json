@@ -10,7 +10,8 @@
     "build": "ts-node ./build/build.ts",
     "deploy": "ts-node ./build/deploy.ts",
     "deploy:testnet": "export TESTNET=1 && ts-node ./build/deploy.ts",
-    "postinstall": "! test -f /app/.glitchdotcom.json || test -d /app/bin || bash .setup.glitch.sh"
+    "postinstall": "! test -f /app/.glitchdotcom.json || test -d /app/bin || bash .setup.glitch.sh",
+    "start": "npm run build"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",
