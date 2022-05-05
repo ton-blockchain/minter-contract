@@ -39,7 +39,7 @@
       "chai",
       "ts-node/register"
     ],
-    "timeout": 10000
+    "timeout": 20000
   },
   "engines": {
     "node": ">=16.0.0"
