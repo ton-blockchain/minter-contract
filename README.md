@@ -52,10 +52,10 @@ Once your local machine is ready, install the project:
 
 ### or.. work online instead
 
-Alternatively, you can ignore the above requirements and develop right inside a web browser with an online IDE and **zero** setup. Simply open this repo inside [Glitch](https://glitch.com/) without installing anything:
+Alternatively, you can ignore the above requirements and develop right inside a web browser with an online IDE and *zero* setup. Simply open this repo inside [Glitch](https://glitch.com/) without installing anything:
 
 * Create your new Glitch workspace by opening [this link](https://glitch.com/edit/#!/remix/clone-from-repo?&REPO_URL=https%3A%2F%2Fgithub.com%2Fton-defi-org%2Ftonstarter-contracts.git) in your browser
-* Wait about 30 seconds until installation completes (click the "LOGS" button on the bottom of the IDE to see progress)
+* Wait about 30 seconds until installation completes <br>(click the "LOGS" button on the bottom of the IDE to see progress)
 * Edit your contract files and tests in the online IDE
 * To run terminal commands like `npm run build` click the "TERMINAL" button on the bottom of the online IDE
 * Working online is slow! run on a local machine if you want a much faster experience
