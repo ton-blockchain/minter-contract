@@ -3,7 +3,11 @@
 // We rely on this script for example to support Glitch.com (online IDE) and have it working in one click
 
 import fs from "fs";
+import path from "path";
 import child_process from "child_process";
+
+// package ton-compiler brings its own func and fift executables which interfere with the system ones
+fs.rmSync(path.join(__dirname, "..", "node_modules", "ton-compiler", "bin"), { recursive: true, force: true });
 
 // check if we're running on glitch.com (glitch is running Ubuntu 16)
 if (fs.existsSync("/app/.glitchdotcom.json")) {

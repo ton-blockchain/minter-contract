@@ -18,8 +18,8 @@ async function main() {
 
   // if we have an explicit bin directory, use the executables there (needed for glitch.com)
   if (fs.existsSync("bin")) {
-    process.env.PATH = __dirname + "/../bin/:" + process.env.PATH;
-    process.env.FIFTPATH = __dirname + "/../bin/fiftlib";
+    process.env.PATH = path.join(__dirname, "..", "bin") + path.delimiter + process.env.PATH;
+    process.env.FIFTPATH = path.join(__dirname, "..", "bin", "fiftlib");
   }
 
   // make sure func compiler is available
