@@ -7,20 +7,22 @@
 This project is part of a set of 3 typical repositories needed for a blockchain dapp running on TON blockchain:
 
 * Smart contracts in FunC that are deployed on-chain (this repo)
-* Web frontend for interacting with the dapp from a web browser
-* Telegram bot for interacting with the dapp from inside Telegram messenger
+* Web frontend for interacting with the dapp from a web browser (coming soon)
+* Telegram bot for interacting with the dapp from inside Telegram messenger (coming soon)
 
 ## What does this repo contain?
 
 * `contracts/*.fc` - Smart contracts for TON blockchain written in [FunC](https://ton.org/docs/#/func) language
-* `build/build.ts` - Build script to compile the FunC code to [Fift](https://ton-blockchain.github.io/docs/fiftbase.pdf)
-* `build/deploy.ts` - Deploy script to deploy the compiled code to TON mainnet
-* `test/*.spec.ts` - Test suite for the contracts running on [Mocha](https://mochajs.org/) test runner
+* `test/*.spec.ts` - Test suite for the contracts in TypeScript running on [Mocha](https://mochajs.org/) test runner
+* `build/_build.ts` - Build script to compile the FunC code to [Fift](https://ton-blockchain.github.io/docs/fiftbase.pdf)
+* `build/_deploy.ts` - Deploy script to deploy the compiled code to TON mainnet (or testnet)
+* `build/_setup.ts` - Setup script to install build dependencies (used primarily for Glitch.com support)
 
 There is no one official way to develop smart contracts for TON. Every developer has their own best practices. This setup is definitely opinionated and some developers may not appreciate the choices made. Nevertheless, we stand by every choice made here and believe that this is the optimal setup to develop fully tested contracts in the most seamless way possible.
 
 Some of the opinionated choices made here include:
 
+* Cross platform support - allow developers to work on Mac M1, Mac Intel, Windows or Linux
 * Strong belief in tests - contracts often manage money - they must be developed under high scrutiny
 * Clear and documented code to help users audit the contracts sources and understand what they do
 * Reliance on modern TypeScript to develop clean and typed scripts and tests in a modern framework
@@ -50,7 +52,7 @@ Once your local machine is ready, install the project:
 * Git clone the repo locally and rename the directory to your own project name
 * In the root repo dir, run in terminal `npm install`
 
-### or.. work online instead
+### or.. work 100% online instead
 
 Alternatively, you can ignore the above requirements and develop right inside a web browser with an online IDE and *zero* setup. Simply open this repo inside [Glitch](https://glitch.com/) without installing anything:
 
@@ -89,7 +91,7 @@ Alternatively, you can ignore the above requirements and develop right inside a 
   * Make sure all contracts are built and your setup is ready to deploy:
     * Each contract to deploy should have a script `build/mycontract.deploy.ts` to return its init data cell
     * The deployment wallet is configured in `.env` (created automatically if not exists), with contents:<br>
-      `DEPLOYER_MNEMONIC="mad nation chief flavor ..."`
+      `DEPLOYER_MNEMONIC="mad nation chief flavor ..."` (24 secret words)
   * To deploy to mainnet (production), run in terminal `npm run deploy`
     * To deploy to testnet instead (where TON coins are free), run `npm run deploy:testnet`
     * Follow the on-screen instructions of the deploy script

@@ -23,7 +23,7 @@ async function main() {
   console.log(`Deploy script running, let's find some contracts to deploy..`);
 
   // check input arguments (given through environment variables)
-  if (process.env.TESTNET) {
+  if (process.env.TESTNET || process.env.npm_lifecycle_event == "deploy:testnet") {
     console.log(`\n* We are working with 'testnet' (https://t.me/testgiver_ton_bot will give you test TON)`);
   } else {
     console.log(`\n* We are working with 'mainnet'`);
