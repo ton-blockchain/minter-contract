@@ -14,7 +14,7 @@ This project is part of a set of 3 typical repositories needed for a blockchain 
 
 * `contracts/*.fc` - Smart contracts for TON blockchain written in [FunC](https://ton.org/docs/#/func) language
 * `test/*.spec.ts` - Test suite for the contracts in TypeScript running on [Mocha](https://mochajs.org/) test runner
-* `build/_build.ts` - Build script to compile the FunC code to [Fift](https://ton-blockchain.github.io/docs/fiftbase.pdf)
+* `build/_build.ts` - Build script to compile the FunC code to [Fift](https://ton-blockchain.github.io/docs/fiftbase.pdf) and [TVM](https://ton-blockchain.github.io/docs/tvm.pdf) opcodes
 * `build/_deploy.ts` - Deploy script to deploy the compiled code to TON mainnet (or testnet)
 * `build/_setup.ts` - Setup script to install build dependencies (used primarily for Glitch.com support)
 
