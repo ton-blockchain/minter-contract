@@ -101,7 +101,7 @@ async function main() {
 
     // run the func compiler to create a fif file
     console.log(` - Trying to compile '${mergedFuncArtifact}' with 'func' compiler..`);
-    const buildErrors = child_process.execSync(`func -APS -o build/${contractName}.fif ${mergedFuncArtifact} 2>&1 >&-`).toString();
+    const buildErrors = child_process.execSync(`func -APS -o build/${contractName}.fif ${mergedFuncArtifact} 1>&3 2>&1`).toString();
     if (buildErrors.length > 0) {
       console.log(` - OH NO! Compilation Errors! The compiler output was:`);
       console.log(`\n${buildErrors}`);
