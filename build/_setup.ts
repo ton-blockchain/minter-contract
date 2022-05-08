@@ -6,8 +6,14 @@ import fs from "fs";
 import child_process from "child_process";
 
 // package ton-compiler brings its own func and fift executables which interfere with the system ones
-fs.unlinkSync(__dirname + "/../node_modules/.bin/func");
-fs.unlinkSync(__dirname + "/../node_modules/.bin/fift");
+try {
+  fs.unlinkSync(__dirname + "/../node_modules/.bin/func");
+  fs.unlinkSync(__dirname + "/../node_modules/.bin/fift");
+} catch (e) {}
+try {
+  fs.unlinkSync(__dirname + "/../node_modules/.bin/func.cmd");
+  fs.unlinkSync(__dirname + "/../node_modules/.bin/fift.cmd");
+} catch (e) {}
 
 // check if we're running on glitch.com (glitch is running Ubuntu 16)
 if (fs.existsSync("/app/.glitchdotcom.json")) {
