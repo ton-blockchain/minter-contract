@@ -14,7 +14,7 @@ dotenv.config();
 import fs from "fs";
 import path from "path";
 import glob from "fast-glob";
-import { Address, Cell, CellMessage, CommonMessageInfo, fromNano, InternalMessage, StateInit, toNano } from "ton";
+import { Address, Cell, CellMessage, CommonMessageInfo, fromNano, InternalMessage, StateInit, toNano, WalletV3R1Source } from "ton";
 import { TonClient, WalletContract, WalletV3R2Source, contractAddress, SendMode } from "ton";
 import { mnemonicNew, mnemonicToWalletKey } from "ton-crypto";
 
@@ -31,7 +31,7 @@ async function main() {
 
   // initialize globals
   const client = new TonClient({ endpoint: `https://${process.env.TESTNET ? "testnet." : ""}toncenter.com/api/v2/jsonRPC` });
-  const deployerWalletType = "org.ton.wallets.v3.r2"; // also see WalletV3R2Source class used below
+  const deployerWalletType = "org.ton.wallets.v3.r1"; // also see WalletV3R2Source class used below
   const newContractFunding = toNano(0.02); // this will be (almost in full) the balance of a new deployed contract and allow it to pay rent
   const workchain = 0; // normally 0, only special contracts should be deployed to masterchain (-1)
 
@@ -51,7 +51,8 @@ async function main() {
 
   // open the wallet and make sure it has enough TON
   const walletKey = await mnemonicToWalletKey(deployerMnemonic.split(" "));
-  const walletContract = WalletContract.create(client, WalletV3R2Source.create({ publicKey: walletKey.publicKey, workchain }));
+  // TODO specify wallet type?
+  const walletContract = WalletContract.create(client, WalletV3R1Source.create({ publicKey: walletKey.publicKey, workchain }));
   console.log(` - Wallet address used to deploy from is: ${walletContract.address.toFriendly()}`);
   const walletBalance = await client.getBalance(walletContract.address);
   if (walletBalance.lt(toNano(0.2))) {
