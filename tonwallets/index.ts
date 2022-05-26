@@ -42,7 +42,7 @@ class WalletSerde {
 (async () => {
   // Create Client
   const client = new TonClient({
-    endpoint: `https://${process.env.TESTNET ? 'testnet.' : ''}toncenter.com/api/v2/jsonRPC`,
+    endpoint: "http://127.0.0.1:4443", // `https://${process.env.TESTNET ? 'testnet.' : ''}toncenter.com/api/v2/jsonRPC`, 
     apiKey: process.env.TESTNET ? process.env.TESTNET_API_KEY : process.env.MAINNET_API_KEY
   });
 

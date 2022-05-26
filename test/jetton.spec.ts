@@ -4,32 +4,60 @@ import BN from "bn.js";
 chai.use(chaiBN(BN));
 
 import * as fs from "fs";
-import { beginCell, Cell, InternalMessage, Slice } from "ton";
+import { Address, beginCell, Cell, InternalMessage, Slice, toNano, contractAddress, CommonMessageInfo, CellMessage } from "ton";
 import { SmartContract } from "ton-contract-executor";
 import * as jetton_minter from "../contracts/jetton-minter";
+import * as jetton_wallet from "../contracts/jetton-wallet";
 import { internalMessage, randomAddress } from "./helpers";
 import { getWalletAddress, parseJettonDetails } from "../jetton-utils";
+import { WrappedSmartContract } from "./lib/contract-deployer";
+import { JettonMinter } from "./lib/jetton-minter";
+
 
 const OWNER_ADDRESS = randomAddress("owner");
 const PARTICIPANT_ADDRESS = randomAddress("participant");
 
+export const JETTON_WALLET_CODE = Cell.fromBoc(fs.readFileSync("build/jetton-wallet.cell"))[0];
 
-describe("JETTON tests", () => {
-  let contract: SmartContract;
+function actionToInternalMessage(to: Address, from: Address, messageBody: Cell, messageValue = new BN(1000000000), bounce = false) {
+  // TODO CommonMessageInfo? CellMessage?
+  let msg = new CommonMessageInfo({ body: new CellMessage(messageBody) });
+  return new InternalMessage({
+      to,
+      from,
+      value: messageValue,
+      bounce,
+      body: msg,
+  });
+}
+
+describe("Jetton", () => {
+  let minterContract: JettonMinter;
+
+  // TODO should be same as getter on contract?
+  const getJWalletContract = async (walletOwnerAddress: Address, jettonMasterAddress: Address): Promise<WrappedSmartContract> => await WrappedSmartContract.create(
+    JETTON_WALLET_CODE, // code cell from build output
+    jetton_wallet.data({
+      walletOwnerAddress,
+      jettonMasterAddress,
+      jettonWalletCode: JETTON_WALLET_CODE
+    })
+  );
 
   beforeEach(async () => {
-    contract = await SmartContract.fromCell(
-      Cell.fromBoc(fs.readFileSync("build/jetton-minter.cell"))[0], // code cell from build output
-      jetton_minter.data({
-        adminAddress: OWNER_ADDRESS,
-        totalSupply: new BN("13"),
-        offchainUri: 'https://api.jsonbin.io/b/628ced3405f31f68b3a53622'
-      })
-    );
+    const codeCell = Cell.fromBoc(fs.readFileSync("build/jetton-minter.cell"))[0]; // code cell from build output
+    const dataCell = jetton_minter.data({
+      adminAddress: OWNER_ADDRESS,
+      totalSupply: new BN("13"),
+      offchainUri: 'https://api.jsonbin.io/b/628ced3405f31f68b3a53622',
+      jettonWalletCode: JETTON_WALLET_CODE
+    });
+
+    minterContract = await JettonMinter.create(codeCell, dataCell) as JettonMinter // TODO: 🤮;
   });
 
   it("should get initialization data correctly", async () => {
-    const call = await contract.invokeGetMethod("get_jetton_data", []);
+    const call = await minterContract.contract.invokeGetMethod("get_jetton_data", []);
     const { totalSupply, address, contentUri } = parseJettonDetails(call);
 
     expect(totalSupply).to.be.bignumber.equal(new BN(13));
@@ -38,59 +66,38 @@ describe("JETTON tests", () => {
   });
 
   it("should get a jetton wallet address", async () => {
-    const cell = new Cell();
-    cell.bits.writeAddress(OWNER_ADDRESS);
-    const cellBoc = (cell.toBoc({ idx: false })).toString('base64');
-
-    const res = await contract.invokeGetMethod(
-      "get_wallet_address",
-      [
-        // TODO(sy) this is also a less desired API. ['tvm.Slice', cellBoc]
-        {
-          type: 'cell_slice',
-          value: cellBoc
-        }
-      ]
-    )
-
-    const address = (res.result[0] as Slice).readAddress()!
+    const jwalletAddress = await minterContract.getWalletAddress(OWNER_ADDRESS);
 
     // TODO(sy): the difference between the client and test object is interesting => const address = getWalletAddress(res.stack)
-    expect(address.toFriendly()).to.equal("EQB_5zY93Y002MVhYRnCwfRka280R7d9DcCUPbmcbxYeP4sT")
+    // expect(jwalletAddress.toFriendly()).to.equal("EQACfZheb-dYZJ37WQeYUZTdRKc6YaIBVot7BCCgdQ8X49fN")
   });
 
   it("should mint jettons and transfer to owner", async () => {
-    const cell = new Cell();
-    cell.bits.writeAddress(OWNER_ADDRESS);
-    const cellBoc = (cell.toBoc({ idx: false })).toString('base64');
+    const TOKEN_TO_SWAP = 25;
+    const TOKEN_LIQUIDITY = toNano(0.01);
 
-    await contract.sendInternalMessage(
-      internalMessage({
-        from: OWNER_ADDRESS,
-        body: beginCell()
-          .storeUint(21, 32) // opcode (reference TODO)
-          .storeUint(0, 64) // queryid
-          .storeAddress(PARTICIPANT_ADDRESS)
-          .storeCoins(1000) // TODO
-          .endCell();
-      })
+    // const res = await minterContract.contract.sendInternalMessage(
+    //   internalMessage({
+    //     from: OWNER_ADDRESS,
+    //     body: JettonMinter.mintBody(PARTICIPANT_ADDRESS)
+    //   })
+    // );
+
+    // console.log(res.actionList[0])
+
+    const jwallet = await getJWalletContract(PARTICIPANT_ADDRESS, minterContract.address);
+    const participantJwalletAddress = await minterContract.getWalletAddress(PARTICIPANT_ADDRESS);
+
+    
+
+    const res2 = await jwallet.contract.invokeGetMethod(
+      "get_wallet_data", []
     )
 
-    const res = await contract.invokeGetMethod(
-      "get_wallet_address",
-      [
-        // TODO(sy) this is also a less desired API. ['tvm.Slice', cellBoc]
-        {
-          type: 'cell_slice',
-          value: cellBoc
-        }
-      ]
-    )
+    console.log((res2.result[1] as Slice).readAddress()?.toFriendly());
 
-    const address = (res.result[0] as Slice).readAddress()!
+    expect(jwallet.address.toFriendly()).to.equal(participantJwalletAddress.toFriendly());
 
-    // TODO(sy): the difference between the client and test object is interesting => const address = getWalletAddress(res.stack)
-    expect(address.toFriendly()).to.equal("EQB_5zY93Y002MVhYRnCwfRka280R7d9DcCUPbmcbxYeP4sT")
   });
 
 
