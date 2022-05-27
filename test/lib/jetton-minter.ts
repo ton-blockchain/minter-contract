@@ -10,7 +10,7 @@ export class JettonMinter extends WrappedSmartContract {
         const res = await this.contract.invokeGetMethod(
             "get_wallet_address",
             [
-                // TODO(sy) this is also a less desired API. ['tvm.Slice', cellBoc]
+                // TODO(sy) ['tvm.Slice', cellBoc] => also a less desired API (tonclient)
                 {
                     type: 'cell_slice',
                     value: beginCell()
