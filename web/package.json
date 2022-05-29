@@ -15,6 +15,7 @@
     "react-app-rewire-typescript": "^2.0.2",
     "react-dom": "^18.1.0",
     "react-scripts": "5.0.1",
+    "recoil": "^0.7.3-alpha.2",
     "tonstarter-contracts": "file:..",
     "typescript": "^4.7.2",
     "web-vitals": "^2.1.4"

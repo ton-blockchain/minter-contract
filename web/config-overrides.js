@@ -3,21 +3,7 @@ const { removeModuleScopePlugin, override, babelInclude } = require("customize-c
 const path = require('path');
 
 module.exports = function override(config) {
-  // config.module.rules.push({
-  //   test: /\.tsx?$/,
-  //   use: ['ts-loader'],
-  //   exclude: /node_modules/,
-  //   // options: {
-  //   //   transpileOnly: true,
-  //   //   configFile: 'tsconfig.json',
-  //   // },
-  // });
-
-  console.log(config.module.rules[1].oneOf[3])
-
   config.module.rules[1].oneOf[3].include = [config.module.rules[1].oneOf[3].include, path.resolve('../lib')]
-
-  // throw new Error("yo")
 
   const fallback = config.resolve.fallback || {};
 
