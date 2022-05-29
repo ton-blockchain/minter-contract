@@ -8,7 +8,8 @@ export enum OPS {
     // ClaimRewards = 0x5a3e000,
     // ClaimRewardsNotification = 0x5a3e001,
     Mint = 21,
-    InternalTransfer = 0x178d4519
+    InternalTransfer = 0x178d4519,
+    Transfer = 0xf8a7ea5
 
 }
 
