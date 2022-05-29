@@ -1,5 +1,6 @@
 // TODO: possibly use this outside tests
 
+import BN from "bn.js";
 import { Address, beginCell, Cell, Slice, toNano } from "ton";
 import { WrappedSmartContract } from "./contract-deployer";
 import { OPS } from "./ops";
@@ -25,7 +26,7 @@ export class JettonMinter extends WrappedSmartContract {
         return (res.result[0] as Slice).readAddress()!
     }
 
-    static mintBody(ownerAddress: Address): Cell {
+    static mintBody(ownerAddress: Address, jettonValue: BN): Cell {
         return beginCell()
             .storeUint(OPS.Mint, 32) // opcode (reference TODO)
             .storeUint(0, 64) // queryid
@@ -35,9 +36,9 @@ export class JettonMinter extends WrappedSmartContract {
                 beginCell()
                     .storeUint(OPS.InternalTransfer, 32)
                     .storeUint(0, 64)
-                    .storeCoins(toNano(0.01)) // JETTON Transfer amount?
-                    .storeAddress(null) // FROM?
-                    .storeAddress(null) // RESP?
+                    .storeCoins(jettonValue)
+                    .storeAddress(null) // TODO FROM?
+                    .storeAddress(null) // TODO RESP?
                     .storeCoins(0)
                     .storeBit(false) // forward_payload in this slice, not separate cell
                     .endCell()
