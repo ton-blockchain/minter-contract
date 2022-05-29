@@ -81,7 +81,7 @@ int gas_consumption() asm "10000000 PUSHINT"; ;; 0.01 TON
                      ;; 3 messages: wal1->wal2,  wal2->owner, wal2->response
                      ;; but last one is optional (it is ok if it fails)
                      fwd_count * fwd_fee +
-                     (2 * gas_consumption() + min_tons_for_storage()));
+                     (2 * gas_consumption() + min_tons_for_storage())); ;; TODO(shahar) ?
                      ;; universal message send fee calculation may be activated here
                      ;; by using this instead of fwd_fee
                      ;; msg_fwd_fee(to_wallet, msg_body, state_init, 15)

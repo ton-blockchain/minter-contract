@@ -22,12 +22,13 @@ const PARTICIPANT_ADDRESS_1 = randomAddress("participant_1");
 const PARTICIPANT_ADDRESS_2 = randomAddress("participant_2");
 
 export const JETTON_WALLET_CODE = Cell.fromBoc(fs.readFileSync("build/jetton-wallet.cell"))[0];
+const JETTON_MINTER_CODE = Cell.fromBoc(fs.readFileSync("build/jetton-minter.cell"))[0]; // code cell from build output
 
 describe("Jetton", () => {
   let minterContract: JettonMinter;
 
   const getJWalletContract = async (walletOwnerAddress: Address, jettonMasterAddress: Address): Promise<JettonWallet> => await JettonWallet.create(
-    JETTON_WALLET_CODE, // code cell from build output
+    JETTON_WALLET_CODE,
     jetton_wallet.data({
       walletOwnerAddress,
       jettonMasterAddress,
@@ -36,7 +37,6 @@ describe("Jetton", () => {
   );
 
   beforeEach(async () => {
-    const codeCell = Cell.fromBoc(fs.readFileSync("build/jetton-minter.cell"))[0]; // code cell from build output
     const dataCell = jetton_minter.data({
       adminAddress: OWNER_ADDRESS,
       totalSupply: new BN(0),
@@ -44,7 +44,7 @@ describe("Jetton", () => {
       jettonWalletCode: JETTON_WALLET_CODE
     });
 
-    minterContract = await JettonMinter.create(codeCell, dataCell) as JettonMinter // TODO: 🤮;
+    minterContract = await JettonMinter.create(JETTON_MINTER_CODE, dataCell) as JettonMinter // TODO: 🤮;
   });
 
   it("should get minter initialization data correctly", async () => {
@@ -84,16 +84,16 @@ describe("Jetton", () => {
     const jwallet1 = await getJWalletContract(PARTICIPANT_ADDRESS_1, minterContract.address);
 
     const { balance: balanceInitial } = parseJettonWalletDetails((await jwallet1.contract.invokeGetMethod("get_wallet_data", [])));
-    expect(balanceInitial).to.bignumber.equal(new BN(0));
+    expect(balanceInitial).to.bignumber.equal(new BN(0), "jwallet1 initial balance should be 0");
 
     // Send mint message to jwallet1
     await jwallet1.contract.sendInternalMessage(actionToMessage(minterContract.address, actionList1[0]));
 
     const { balance: balanceAfter } = parseJettonWalletDetails((await jwallet1.contract.invokeGetMethod("get_wallet_data", [])));
-    expect(balanceAfter).to.bignumber.equal(toNano(0.01));
+    expect(balanceAfter).to.bignumber.equal(toNano(0.01), "jwallet1 should reflact its balance after mint");
 
     let { totalSupply } = parseJettonDetails((await minterContract.contract.invokeGetMethod("get_jetton_data", [])))
-    expect(totalSupply).to.bignumber.equal(toNano(0.01));
+    expect(totalSupply).to.bignumber.equal(toNano(0.01), "total supply should increase after first mint");
 
     // Mint and transfer to jwallet2
     const { actionList: actionList2 } = await minterContract.contract.sendInternalMessage(
@@ -107,10 +107,10 @@ describe("Jetton", () => {
     await jwallet2.contract.sendInternalMessage(actionToMessage(minterContract.address, actionList2[0]));
 
     const { balance: balanceAfter2 } = parseJettonWalletDetails((await jwallet2.contract.invokeGetMethod("get_wallet_data", [])));
-    expect(balanceAfter2).to.bignumber.equal(toNano(0.02));
+    expect(balanceAfter2).to.bignumber.equal(toNano(0.02), "jwallet2 should reflact its balance after mint");
 
     totalSupply = parseJettonDetails((await minterContract.contract.invokeGetMethod("get_jetton_data", []))).totalSupply;
-    expect(totalSupply).to.bignumber.equal(toNano(0.03));
+    expect(totalSupply).to.bignumber.equal(toNano(0.03), "total supply should amount to both mints");
   });
 
   it("should mint jettons and transfer from wallet1 to wallet2", async () => {
@@ -128,7 +128,6 @@ describe("Jetton", () => {
     await jwallet1.contract.sendInternalMessage(actionToMessage(minterContract.address, actionList1[0]));
 
     // Transfer jwallet1-->jwallet2
-    // TODO investigte why 65535 if sending this to the wrong contract (minterCtrct)
     const res = await jwallet1.contract.sendInternalMessage(
       internalMessage({
         from: PARTICIPANT_ADDRESS_1, // TODO what is this from..? Prolly should be jwallet p1 address. is this a testutil that signs the msg?
@@ -150,11 +149,6 @@ describe("Jetton", () => {
     expect(totalSupply).to.bignumber.equal(toNano(0.01), "total supply should not change");
   });
 
-
-
-
-
-
   /*
   Further tests:
   - burn
@@ -163,6 +157,4 @@ describe("Jetton", () => {
   - change owner
   - change content / immutable vs nonimmutable
   */
-
-
 });
