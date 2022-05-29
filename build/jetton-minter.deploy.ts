@@ -4,13 +4,13 @@ import { sendInternalMessageWithWallet } from "../test/helpers";
 import { BN } from "bn.js";
 
 // return the init Cell of the contract storage (according to load_data() contract method)
-export function initData() {
-  return jettonMinter.data({
-    totalSupply: new BN(100000000),
-    adminAddress: Address.parseFriendly("EQD5677K8UgJ6OWmQT74oRUI5lB7be15jW_ot7oNweN-PdcN").address,
-    offchainUri: 'https://api.jsonbin.io/b/628d3eef402a5b38020beade'
-  });
-}
+// export function initData() {
+//   return jettonMinter.data({
+//     totalSupply: new BN(100000000),
+//     adminAddress: Address.parseFriendly("EQD5677K8UgJ6OWmQT74oRUI5lB7be15jW_ot7oNweN-PdcN").address,
+//     offchainUri: 'https://api.jsonbin.io/b/628d3eef402a5b38020beade',
+//   });
+// }
 
 // return the op that should be sent to the contract on deployment, can be "null" to send an empty message
 export function initMessage() {

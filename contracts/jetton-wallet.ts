@@ -1,5 +1,4 @@
 import { Cell, beginCell, Address, BitString } from "ton";
-import { JETTON_WALLET_CODE_HEX } from "./jetton-minter";
 
 export function data(params: { walletOwnerAddress: Address, jettonMasterAddress: Address, jettonWalletCode: Cell }): Cell {
   return beginCell()

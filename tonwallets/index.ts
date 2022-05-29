@@ -6,7 +6,7 @@ import BN from "bn.js";
 
 const WORKCHAIN = 0;
 const TON_0_1 = new BN("100000000");
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 interface WalletJSON {
   address: Address,
@@ -105,6 +105,8 @@ class WalletSerde {
     //   .endCell()
 
     const cellBoc = (cell.toBoc({ idx: false })).toString('base64');
+    
+    // @ts-ignore
     const MINTER_CONTRACT_ADDRESS = Address.parse(process.env.TESTNET ? process.env.TESTNET_MINTER_CONTRACT : process.env.MAINNET_MINTER_CONTRACT);
 
     const res = await client.callGetMethod(

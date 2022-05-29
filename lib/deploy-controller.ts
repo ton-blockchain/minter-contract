@@ -25,15 +25,15 @@ class DeployController {
 
         // Assume we've uploaded to IPFS
         
-        try {
-            await this.#contractDeployer.deployContract(
-                this.#transactionSender,
-                JettonContract.createFrom(jettonDetails, JettonContract.mint(to...))
-            )
-        } catch(e) {
-            // TODO deploy-specific errors
-            throw e;
-        }
+        // try {
+        //     await this.#contractDeployer.deployContract(
+        //         this.#transactionSender,
+        //         JettonContract.createFrom(jettonDetails, JettonContract.mint(to...))
+        //     )
+        // } catch(e) {
+        //     // TODO deploy-specific errors
+        //     throw e;
+        // }
 
         // Assuming contract was deployed with mint
 
