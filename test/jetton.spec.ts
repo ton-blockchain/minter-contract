@@ -14,7 +14,6 @@ import { WrappedSmartContract } from "./lib/contract-deployer";
 import { JettonMinter } from "./lib/jetton-minter";
 import { actionToMessage } from "./lib/utils";
 import { JettonWallet } from "./lib/jetton-wallet";
-import { filterLogs } from "../test3/utils";
 
 
 const OWNER_ADDRESS = randomAddress("owner");
