@@ -1,6 +1,7 @@
 import { Address, TonClient, Wallet } from "ton";
 
-class DeployController {
+
+export class DeployController {
     #client: TonClient;
     #contractDeployer: IContractDeployer;
     #transactionSender: ITransactionSender;

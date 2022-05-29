@@ -5,8 +5,12 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "rootDir": "lib",
+    "outDir": "dist",
   },
+  "include": ["lib"],
+  "exclude": ["node_modules", "dist"],
   "ts-node": {
     "transpileOnly": true,
     "transpiler": "ts-node/transpilers/swc"
