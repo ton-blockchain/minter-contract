@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import {doThing} from 'tonstarter-contracts';
+import { TransactionSender, JettonDeployController, EnvProfiles, Environments, ContractDeployer, TonDeepLinkTransactionSender, ChromeExtensionTransactionSender } from 'tonstarter-contracts';
 import {
   RecoilRoot,
   atom,
@@ -9,6 +9,7 @@ import {
   useRecoilState,
   useRecoilValue,
 } from 'recoil';
+import { Address, TonClient } from 'ton';
 // setTimeout(() => {
 //   const x = new Module.default()
 //   x.createJetton()
@@ -47,7 +48,7 @@ function MyComp() {
 
   const [jettonState, setJettonState] = useRecoilState(jettonStateAtom);
 
-  async function deployContract() {
+  async function deployContract(transactionSender: TransactionSender) {
     console.log('clicked')
 
     //@ts-ignore
@@ -61,9 +62,16 @@ function MyComp() {
     //   result[0].address
     // )
 
+    const dep = new JettonDeployController(
+      new TonClient({ endpoint: EnvProfiles[Environments.SANDBOX].rpcApi }),
+      new ContractDeployer(),
+      transactionSender
+    );
 
-    await doThing()
-
+    await dep.createJetton(
+      Address.parse("kQDBQnDNDtDoiX9np244sZmDcEyIYmMcH1RiIxh59SRpKZsb") // TODO from state. this could come from chrome ext
+      // TODO add jetton details (name etc)
+    )
 
   }
 
@@ -74,7 +82,8 @@ function MyComp() {
           Jetton: {JSON.stringify(jettonState)} {process.env.REACT_APP_NOT_SECRET_CODE}
         </div>
         <div>
-          <button onClick={deployContract}>Deploy contract</button>
+          <button onClick={deployContract.bind(null, new TonDeepLinkTransactionSender())}>Deploy contract (tonhub)</button>
+          <button onClick={deployContract.bind(null, new ChromeExtensionTransactionSender())}>Deploy contract (chromext)</button>
         </div>
       </header>
     </div>
