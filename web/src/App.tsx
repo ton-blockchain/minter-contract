@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import { TransactionSender, JettonDeployController, EnvProfiles, Environments, ContractDeployer, TonDeepLinkTransactionSender, ChromeExtensionTransactionSender } from 'tonstarter-contracts';
+import { JettonDeployState, TransactionSender, JettonDeployController, EnvProfiles, Environments, ContractDeployer, TonDeepLinkTransactionSender, ChromeExtensionTransactionSender } from 'tonstarter-contracts';
 import {
   RecoilRoot,
   atom,
@@ -10,6 +10,7 @@ import {
   useRecoilValue,
 } from 'recoil';
 import { Address, TonClient } from 'ton';
+import { JettonDeployParams } from '../../lib/deploy-controller';
 // setTimeout(() => {
 //   const x = new Module.default()
 //   x.createJetton()
@@ -68,10 +69,11 @@ function MyComp() {
       transactionSender
     );
 
-    await dep.createJetton(
-      Address.parse("kQDBQnDNDtDoiX9np244sZmDcEyIYmMcH1RiIxh59SRpKZsb") // TODO from state. this could come from chrome ext
-      // TODO add jetton details (name etc)
-    )
+    await dep.createJetton({
+      owner: Address.parse("kQDBQnDNDtDoiX9np244sZmDcEyIYmMcH1RiIxh59SRpKZsb"), // TODO from state. this could come from chrome ext
+      mintToOwner: false,
+      onProgress: state => console.log(JettonDeployState[state])
+    })
 
   }
 

@@ -10,6 +10,23 @@ const walletCode = "B5EE9C7241021101000319000114FF00F4A413F4BCF2C80B010201620203
 
 const JETTON_DEPLOY_GAS = toNano(0.4);
 
+export enum JettonDeployState {
+    NOT_STARTED,
+    BALANCE_CHECK,
+    UPLOAD_IMAGE,
+    UPLOAD_METADATA,
+    VERIFY_DEPLOY,
+    VERIFY_MINT
+}
+
+export interface JettonDeployParams {
+    owner: Address,
+    mintToOwner: boolean,
+    jettonName?: string,
+    jettonIconImageData?: Buffer
+    onProgress?: (state: JettonDeployState, error?: Error, msg?: string) => void
+}
+
 export class JettonDeployController {
     #client: TonClient;
     #contractDeployer: ContractDeployer;
@@ -24,11 +41,10 @@ export class JettonDeployController {
         this.#transactionSender = transactionSender;
     }
 
-    async createJetton(
-        ownerAddress: Address
-    ) {
-        const balance = await this.#client.getBalance(ownerAddress);
-        if (balance < JETTON_DEPLOY_GAS) throw new Error("Not enough balance in deployer wallet");
+    async createJetton(params: JettonDeployParams) {
+        params.onProgress?.(JettonDeployState.BALANCE_CHECK);
+        const balance = await this.#client.getBalance(params.owner);
+        if (balance.lt(JETTON_DEPLOY_GAS)) throw new Error("Not enough balance in deployer wallet");
 
         // TODO - how/should we use the deployer here?
 
@@ -46,16 +62,16 @@ export class JettonDeployController {
 
         try {
             await this.#contractDeployer.deployContract(
-                // JettonContract.createFrom(jettonDetails, JettonContract.mint(to...)),
+                // TODO extract this
                 {
                     code: Cell.fromBoc(minterCode)[0],
                     data: beginCell()
                         .storeCoins(16)
-                        .storeAddress(ownerAddress)
+                        .storeAddress(params.owner)
                         .storeRef(beginCell().endCell()) // TODO
                         .storeRef(Cell.fromBoc(walletCode)[0])
                         .endCell(),
-                    deployer: ownerAddress,
+                    deployer: params.owner,
                     value: toNano(0.25)
                 },
                 this.#transactionSender
@@ -65,53 +81,44 @@ export class JettonDeployController {
             throw e;
         }
 
-        // Assuming contract was deployed with mint
-
     }
-
-
-    async #deployContract(params: any) {
-
-
-
-    }
-
 }
 
-export async function doThing() {
-    const client = new TonClient({
-        endpoint: api
-    });
 
-    const dc = new DeployController(
-        client,
-        new MyContractDeployer(),
-        new TonDeepLinkTransactionSender()
-        // new PrivKeyTransactionSender()
-        // new ChromeExtensionTransactionSender()
-    );
+// export async function doThing() {
+//     const client = new TonClient({
+//         endpoint: api
+//     });
 
-    await dc.createJetton("kQDBQnDNDtDoiX9np244sZmDcEyIYmMcH1RiIxh59SRpKZsb") // SANDBOX
-    // await dc.createJetton("EQA6j4K2gZOIG6wHaijLWBf9k6II8FPAAQnSDHyQZNYMndOI") // TESTNET
+//     const dc = new DeployController(
+//         client,
+//         new MyContractDeployer(),
+//         new TonDeepLinkTransactionSender()
+//         // new PrivKeyTransactionSender()
+//         // new ChromeExtensionTransactionSender()
+//     );
 
-    // const addr = "kQDIl8tncyge15Qrn26u2e3JDkRgKx4jzBGAdN-AtehybGGu"
-    const addr = "kQDQLOmiD-6ngqcXfvJ0EJaBbesa2VcoLrgClc_ARofF-GdP"
+//     await dc.createJetton("kQDBQnDNDtDoiX9np244sZmDcEyIYmMcH1RiIxh59SRpKZsb") // SANDBOX
+//     // await dc.createJetton("EQA6j4K2gZOIG6wHaijLWBf9k6II8FPAAQnSDHyQZNYMndOI") // TESTNET
 
-    const isDeployed = await client.isContractDeployed(Address.parse(addr));
+//     // const addr = "kQDIl8tncyge15Qrn26u2e3JDkRgKx4jzBGAdN-AtehybGGu"
+//     const addr = "kQDQLOmiD-6ngqcXfvJ0EJaBbesa2VcoLrgClc_ARofF-GdP"
 
-    console.log(isDeployed)
+//     const isDeployed = await client.isContractDeployed(Address.parse(addr));
 
-    const res = await client.callGetMethod(
-        Address.parse(addr),
-        "get_jetton_data"
-    )
+//     console.log(isDeployed)
 
-    console.log(res.stack[0][1])
-}
+//     const res = await client.callGetMethod(
+//         Address.parse(addr),
+//         "get_jetton_data"
+//     )
 
-(async () => {
+//     console.log(res.stack[0][1])
+// }
 
-    // await doThing()
+// (async () => {
+
+//     // await doThing()
 
 
-})()
+// })()
