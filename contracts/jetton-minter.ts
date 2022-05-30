@@ -27,6 +27,7 @@ export function data(params: { totalSupply: BN; adminAddress: Address, offchainU
     .endCell();
 }
 
+
 // message encoders for all ops (see contracts/imports/constants.fc for consts)
 
 // export function increment(): Cell {

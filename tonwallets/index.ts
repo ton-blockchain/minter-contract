@@ -8,6 +8,12 @@ const WORKCHAIN = 0;
 const TON_0_1 = new BN("100000000");
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
+import axios from "axios";
+import axiosThrottle from "axios-request-throttle";
+axiosThrottle.use(axios, { requestsPerSecond: 0.5 }); // required since toncenter jsonRPC limits to 1 req/sec without API key
+
+process.env.TESTNET = 1;
+
 interface WalletJSON {
   address: Address,
   key: KeyPair,
@@ -42,7 +48,7 @@ class WalletSerde {
 (async () => {
   // Create Client
   const client = new TonClient({
-    endpoint: "http://127.0.0.1:4443", // `https://${process.env.TESTNET ? 'testnet.' : ''}toncenter.com/api/v2/jsonRPC`, 
+    endpoint: `https://${process.env.TESTNET ? 'testnet.' : ''}toncenter.com/api/v2/jsonRPC`, 
     apiKey: process.env.TESTNET ? process.env.TESTNET_API_KEY : process.env.MAINNET_API_KEY
   });
 
@@ -105,7 +111,7 @@ class WalletSerde {
     //   .endCell()
 
     const cellBoc = (cell.toBoc({ idx: false })).toString('base64');
-    
+
     // @ts-ignore
     const MINTER_CONTRACT_ADDRESS = Address.parse(process.env.TESTNET ? process.env.TESTNET_MINTER_CONTRACT : process.env.MAINNET_MINTER_CONTRACT);
 
@@ -170,4 +176,3 @@ class WalletSerde {
 //             console.log("exception", e);
 //         }
 //     }
-

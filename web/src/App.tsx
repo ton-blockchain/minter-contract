@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import {DeployController, TonChromeExtTransactionSender, DeployControllerFactory} from 'tonstarter-contracts';
+import {doThing} from 'tonstarter-contracts';
 import {
   RecoilRoot,
   atom,
@@ -57,10 +57,12 @@ function MyComp() {
     if (result.length === 0) throw new Error("NO WALLET");
 
 
-    await DeployControllerFactory.create().createJetton(
-      result[0].address
-    )
+    // await DeployControllerFactory.create().createJetton(
+    //   result[0].address
+    // )
 
+
+    await doThing()
 
 
   }
