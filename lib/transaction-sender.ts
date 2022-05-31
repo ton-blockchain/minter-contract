@@ -6,7 +6,7 @@ export interface TransactionDetails {
     to: Address,
     value: BN,
     stateInit: StateInit,
-    message?: any // TODO
+    message?: Cell
 }
 
 export interface TransactionSender {
@@ -21,14 +21,13 @@ export class ChromeExtensionTransactionSender implements TransactionSender {
 
         const INIT_CELL = new Cell()
         transactionDetails.stateInit.writeTo(INIT_CELL);
-
         const b64InitCell = INIT_CELL.toBoc().toString('base64')
 
         ton.send('ton_sendTransaction', [
             {
                 to: transactionDetails.to.toFriendly(),
                 value: transactionDetails.value.toString(),
-                data: null,
+                data: transactionDetails.message?.toBoc().toString('base64'),
                 dataType: 'boc',
                 stateInit: b64InitCell,
             }
@@ -36,6 +35,7 @@ export class ChromeExtensionTransactionSender implements TransactionSender {
     }
 }
 
+// TODO handle message
 export class PrivKeyTransactionSender implements TransactionSender {
     #mnemonic: string;
 
@@ -130,11 +130,17 @@ export class TonDeepLinkTransactionSender implements TransactionSender {
     async sendTransaction(transactionDetails: TransactionDetails): Promise<void> {
         if (!global['open']) throw new Error("Missing open url web API. Are you running in a browser?")
 
-        const INIT_CELL = new Cell()
+        const INIT_CELL = new Cell();
         transactionDetails.stateInit.writeTo(INIT_CELL);
-        const b64InitCell = this.#encodeBase64URL(INIT_CELL.toBoc())
+        const b64InitCell = this.#encodeBase64URL(INIT_CELL.toBoc());
 
-        const link = `${this.#deepLinkPrefix}://transfer/${transactionDetails.to.toFriendly()}?amount=${transactionDetails.value}&init=${b64InitCell}`;
+        let link = `${this.#deepLinkPrefix}://transfer/${transactionDetails.to.toFriendly()}?amount=${transactionDetails.value}&init=${b64InitCell}`;
+
+        if (transactionDetails.message) {
+            const b64MsgCell = this.#encodeBase64URL(transactionDetails.message.toBoc())
+            link = `${link}&bin=${b64MsgCell}`;
+        }
+
         open(link)
     }
 }
