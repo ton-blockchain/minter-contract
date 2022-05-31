@@ -11,7 +11,7 @@ const walletCode = "B5EE9C7241021101000319000114FF00F4A413F4BCF2C80B010201620203
 // TODO temporary
 import axios from "axios";
 import axiosThrottle from "axios-request-throttle";
-axiosThrottle.use(axios, { requestsPerSecond: 0.5 }); // required since toncenter jsonRPC limits to 1 req/sec without API key
+axiosThrottle.use(axios, { requestsPerSecond: 0.9 }); // required since toncenter jsonRPC limits to 1 req/sec without API key
 
 const JETTON_DEPLOY_GAS = toNano(0.4);
 
@@ -171,7 +171,7 @@ export class JettonDeployController {
         const ownerJWalletAddr = (parseGetMethodCall(res2.stack)[0] as Cell).beginParse().readAddress()!;
 
         const res3 = await this.#client.callGetMethod(ownerJWalletAddr, "get_wallet_data");
-        if (!(parseGetMethodCall(res3.stack)[0] as BN).eq(toMint)) throw new Error("Mint fail");
+        if (!(parseGetMethodCall(res3.stack)[0] as BN).eq(params.amountToMint)) throw new Error("Mint fail");
         params.onProgress?.(JettonDeployState.DONE);
     }
 }

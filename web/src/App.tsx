@@ -38,6 +38,12 @@ function MyComp() {
 
   const myFile: any = useRef(null);
   const [jettonState, setJettonState] = useRecoilState(jettonStateAtom);
+  const [jettonParams, setJettonParams] = useState({
+    name: "JUJU Coin",
+    symbol: "JUJ",
+    mintAmount: 100,
+    mintToOwner: true
+  });
 
   async function deployContract(transactionSender: TransactionSender, addressStr: string, env: Environments) {
     //@ts-ignore
@@ -60,16 +66,36 @@ function MyComp() {
       //@ts-ignore
       onProgress: (depState, err, extra) => setJettonState(oldState => ({ ...oldState, state: depState, contractAddress: depState === JettonDeployState.VERIFY_MINT ? extra : oldState.contractAddress })),
       jettonIconImageData: myFile.current,
-      jettonName: "ZECOIN",
-      jettonSymbol: "ZC",
-      amountToMint: toNano(100)
+      jettonName: jettonParams.name,
+      jettonSymbol: jettonParams.symbol,
+      amountToMint: toNano(jettonParams.mintAmount)
     })
 
+  }
+
+  function handleChange(e: any, k: string) {
+    setJettonParams(o => ({ ...o, [k]: e.target.value }));
   }
 
   return (
     <div className="App">
       <header className="App-header">
+        <div style={{textAlign: 'left'}}>
+          <form>
+            <div>Name <input type="text" value={jettonParams.name} onChange={(e) => { handleChange(e, "name") }} /></div>
+            <div>Symbol <input type="text" value={jettonParams.symbol} onChange={(e) => { handleChange(e, "symbol") }} /></div>
+            <div>Amount to mint <input type="number" value={jettonParams.mintAmount} onChange={(e) => { handleChange(e, "mintAmount") }} /></div>
+            <div>Mint to owner <input type="checkbox" defaultChecked disabled/></div>
+            <div>
+              <input type='file' onChange={(e) => {
+                myFile.current = e.target.files![0];
+              }} />
+            </div>
+          </form >
+        </div >
+        <br />
+        <br />
+        <br />
         <div>
           Jetton: {JettonDeployState[jettonState.state]}
         </div>
@@ -93,11 +119,6 @@ function MyComp() {
             await deployContract(new ChromeExtensionTransactionSender(), x[0].address, Environments.TESTNET);
 
           }}>Deploy contract (chromext)</button>
-        </div>
-        <div>
-          <input type='file' onChange={(e) => {
-            myFile.current = e.target.files![0];
-          }} />
         </div>
       </header >
     </div >
