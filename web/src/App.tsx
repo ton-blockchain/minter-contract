@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import { JettonDeployState, TransactionSender, JettonDeployController, EnvProfiles, Environments, ContractDeployer, TonDeepLinkTransactionSender, ChromeExtensionTransactionSender } from 'tonstarter-contracts';
@@ -9,7 +9,7 @@ import {
   useRecoilState,
   useRecoilValue,
 } from 'recoil';
-import { Address, TonClient } from 'ton';
+import { Address, TonClient, toNano } from 'ton';
 import { JettonDeployParams } from '../../lib/deploy-controller';
 // setTimeout(() => {
 //   const x = new Module.default()
@@ -36,13 +36,14 @@ function App() {
 
 function MyComp() {
 
-
+  const myFile: any = useRef(null);
   const [jettonState, setJettonState] = useRecoilState(jettonStateAtom);
 
   async function deployContract(transactionSender: TransactionSender, addressStr: string, env: Environments) {
     //@ts-ignore
     const ton = window.ton as any;
     const result = await ton.send('ton_requestWallets')
+
 
     if (result.length === 0) throw new Error("NO WALLET");
 
@@ -57,7 +58,11 @@ function MyComp() {
       owner: Address.parse(addressStr), // TODO from state. this could come from chrome ext
       mintToOwner: false,
       //@ts-ignore
-      onProgress: (depState, err, extra) => setJettonState(oldState => ({ ...oldState, state: depState, contractAddress: depState === JettonDeployState.VERIFY_MINT ? extra : oldState.contractAddress }))
+      onProgress: (depState, err, extra) => setJettonState(oldState => ({ ...oldState, state: depState, contractAddress: depState === JettonDeployState.VERIFY_MINT ? extra : oldState.contractAddress })),
+      jettonIconImageData: myFile.current,
+      jettonName: "ZECOIN",
+      jettonSymbol: "ZC",
+      amountToMint: toNano(100)
     })
 
   }
@@ -88,6 +93,11 @@ function MyComp() {
             await deployContract(new ChromeExtensionTransactionSender(), x[0].address, Environments.TESTNET);
 
           }}>Deploy contract (chromext)</button>
+        </div>
+        <div>
+          <input type='file' onChange={(e) => {
+            myFile.current = e.target.files![0];
+          }} />
         </div>
       </header >
     </div >

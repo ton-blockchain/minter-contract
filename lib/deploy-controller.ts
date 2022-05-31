@@ -27,10 +27,13 @@ export enum JettonDeployState {
 }
 
 export interface JettonDeployParams {
+    jettonName: string,
+    jettonSymbol: string;
+    jettonIconImageData?: File // or Blob?
+    jettonDescripton?: string,
     owner: Address,
     mintToOwner: boolean,
-    jettonName?: string,
-    jettonIconImageData?: Buffer
+    amountToMint: BN,
     onProgress?: (state: JettonDeployState, error?: Error, msg?: string) => void
 }
 
@@ -61,10 +64,28 @@ export async function waitForContractDeploy(address: Address, client: TonClient)
     throw new Error("Timeout");
 }
 
+class IPFSUploader {
+    async upload(data: any): Promise<string> {
+        const formData = new FormData();
+        formData.append('file', data)
+
+        // TODO do we trust this to stay
+        const { data: respData } = await axios.post('https://ipfs.infura.io:5001/api/v0/add', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+
+        // TODO do we trust this to stay #2
+        return `https://ipfs.io/ipfs/${respData.Hash}`;
+    }
+}
+
 export class JettonDeployController {
     #client: TonClient;
     #contractDeployer: ContractDeployer;
     #transactionSender: TransactionSender;
+    #ipfsUploader: IPFSUploader;
 
     constructor(
         client: TonClient,
@@ -73,6 +94,7 @@ export class JettonDeployController {
         this.#client = client;
         this.#contractDeployer = contractDeployer;
         this.#transactionSender = transactionSender;
+        this.#ipfsUploader = new IPFSUploader()
     }
 
     async createJetton(params: JettonDeployParams) {
@@ -83,32 +105,22 @@ export class JettonDeployController {
 
         const ownerWallet = this.#client.openWalletFromAddress({ source: params.owner });
 
-        // TODO - how/should we use the deployer here?
-
-        /*
-            1. Upload image to IPFS? expose API KEY?
-            2. Upload JSON to IPFS?
-            3. Deploy contract?
-            4. Mint to owner?
-        */
-
-        // Assume we've uploaded to IPFS
-
-        const ipfsImageLink = "...";
-        const ipfsJsonLink = "...";
-
-        // const waiter = await waitForSeqno(ownerWallet);
-
-        const toMint = toNano(100) // TODO parametrize
+        const ipfsImageLink = await this.#ipfsUploader.upload(params.jettonIconImageData);
+        const ipfsJsonLink = await this.#ipfsUploader.upload(JSON.stringify({
+            "name": params.jettonName,
+            "symbol": params.jettonSymbol,
+            "description": params.jettonDescripton,
+            "image": ipfsImageLink
+        }));
 
         const deployParams = {
             code: Cell.fromBoc(minterCode)[0],
-            data: JettonMinter.initData(params.owner),
+            data: JettonMinter.initData(params.owner, ipfsJsonLink),
             deployer: params.owner,
             value: toNano(0.25),
             message: JettonMinter.mintBody(
                 params.owner,
-                toMint
+                params.amountToMint
             ),
         };
 
@@ -122,13 +134,13 @@ export class JettonDeployController {
                     deployParams,
                     this.#transactionSender
                 )
+                params.onProgress?.(JettonDeployState.AWAITING_DEPLOY);
             } catch (e) {
                 // TODO deploy-specific errors
                 throw e;
             }
         }
 
-        params.onProgress?.(JettonDeployState.AWAITING_DEPLOY);
         await waitForContractDeploy(contractAddr, this.#client);
         params.onProgress?.(JettonDeployState.VERIFY_MINT, undefined, contractAddr.toFriendly()); // TODO better way of emitting the contract?
 
@@ -140,14 +152,18 @@ export class JettonDeployController {
         const deployedOwnerAddress = (parseGetMethodCall(res.stack)[2] as Cell).beginParse().readAddress()!;
         if (deployedOwnerAddress.toFriendly() !== params.owner.toFriendly()) throw new Error("Contract deployed incorrectly");
 
-        let cell = new Cell();
-        cell.bits.writeAddress(params.owner);
-        // nodejs buffer
-        let b64dataBuffer = (await cell.toBoc({ idx: false })).toString("base64");
-        console.log(b64dataBuffer)
+        // const contentCell = (parseGetMethodCall(res.stack)[3] as Cell).beginParse();
+        // contentCell.readInt(8);
+        // console.log("contentURI:" + contentCell.readRemainingBytes().toString('ascii'))
+
+        // let cell = new Cell();
+        // cell.bits.writeAddress(params.owner);
+        // // nodejs buffer
+        // let b64dataBuffer = (await cell.toBoc({ idx: false })).toString("base64");
+        // console.log(b64dataBuffer)
 
 
-        console.log(beginCell().storeAddress(params.owner).endCell().toBoc({ idx: false }).toString('base64'));
+        // console.log(beginCell().storeAddress(params.owner).endCell().toBoc({ idx: false }).toString('base64'));
 
         // todo what's the deal with idx:false
         const res2 = await this.#client.callGetMethod(contractAddr, "get_wallet_address", [["tvm.Slice", beginCell().storeAddress(params.owner).endCell().toBoc({ idx: false }).toString('base64')]]);
@@ -159,6 +175,7 @@ export class JettonDeployController {
     }
 }
 
+// TODO extract util
 function parseGetMethodCall(stack: any[]) {
     return stack.map(([type, val]) => {
         switch (type) {
@@ -169,7 +186,7 @@ function parseGetMethodCall(stack: any[]) {
             default:
                 throw new Error('unknown type')
         }
-    })
+    });
 }
 
 // export async function doThing() {
@@ -218,11 +235,16 @@ enum OPS {
 
 class JettonMinter {
 
-    static initData(owner: Address) {
+    static initData(owner: Address, contentUri: string) {
         return beginCell()
             .storeCoins(17) // TODO Should be 0
             .storeAddress(owner)
-            .storeRef(beginCell().endCell()) // TODO construct the ipfs url
+            .storeRef(
+                beginCell()
+                    .storeInt(1, 8)
+                    .storeBuffer(Buffer.from(contentUri, "ascii"))
+                    .endCell()
+            )
             .storeRef(Cell.fromBoc(walletCode)[0])
             .endCell()
     }
