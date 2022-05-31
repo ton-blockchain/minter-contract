@@ -20,7 +20,8 @@ export enum JettonDeployState {
     BALANCE_CHECK,
     UPLOAD_IMAGE,
     UPLOAD_METADATA,
-    AWAITING_DEPLOY,
+    AWAITING_MINTER_DEPLOY,
+    AWAITING_JWALLET_DEPLOY,
     VERIFY_MINT,
     ALREADY_DEPLOYED,
     DONE
@@ -135,15 +136,13 @@ export class JettonDeployController {
                     deployParams,
                     this.#transactionSender
                 )
-                params.onProgress?.(JettonDeployState.AWAITING_DEPLOY);
+                params.onProgress?.(JettonDeployState.AWAITING_MINTER_DEPLOY);
+                await waitForContractDeploy(contractAddr, this.#client);
             } catch (e) {
                 // TODO deploy-specific errors
                 throw e;
             }
         }
-
-        await waitForContractDeploy(contractAddr, this.#client);
-        params.onProgress?.(JettonDeployState.VERIFY_MINT, undefined, contractAddr.toFriendly()); // TODO better way of emitting the contract?
 
         const res = await this.#client.callGetMethod(
             contractAddr,
@@ -167,12 +166,56 @@ export class JettonDeployController {
         // console.log(beginCell().storeAddress(params.owner).endCell().toBoc({ idx: false }).toString('base64'));
 
         // todo what's the deal with idx:false
+
         const res2 = await this.#client.callGetMethod(contractAddr, "get_wallet_address", [["tvm.Slice", beginCell().storeAddress(params.owner).endCell().toBoc({ idx: false }).toString('base64')]]);
         const ownerJWalletAddr = (parseGetMethodCall(res2.stack)[0] as Cell).beginParse().readAddress()!;
+
+        params.onProgress?.(JettonDeployState.AWAITING_MINTER_DEPLOY);
+        await waitForContractDeploy(ownerJWalletAddr, this.#client);
+
+        params.onProgress?.(JettonDeployState.VERIFY_MINT, undefined, contractAddr.toFriendly()); // TODO better way of emitting the contract?
 
         const res3 = await this.#client.callGetMethod(ownerJWalletAddr, "get_wallet_data");
         if (!(parseGetMethodCall(res3.stack)[0] as BN).eq(params.amountToMint)) throw new Error("Mint fail");
         params.onProgress?.(JettonDeployState.DONE);
+    }
+
+    async getJettonDetails(contractAddr: Address, owner:Address) {
+        const res = await this.#client.callGetMethod(
+            contractAddr,
+            "get_jetton_data"
+        )
+
+        const contentCell = (parseGetMethodCall(res.stack)[3] as Cell).beginParse();
+        contentCell.readInt(8);
+        const jsonURI = contentCell.readRemainingBytes().toString('ascii');
+        const jsonData = (await axios.get(jsonURI)).data
+
+        const res2 = await this.#client.callGetMethod(contractAddr, "get_wallet_address", [["tvm.Slice", beginCell().storeAddress(owner).endCell().toBoc({ idx: false }).toString('base64')]]);
+        const ownerJWalletAddr = (parseGetMethodCall(res2.stack)[0] as Cell).beginParse().readAddress()!;
+
+        const res3 = await this.#client.callGetMethod(ownerJWalletAddr, "get_wallet_data");
+
+        return {
+            jetton: {...jsonData, contractAddress: contractAddr.toFriendly()},
+            wallet: {
+                jettonAmount: (parseGetMethodCall(res3.stack)[0] as BN).toString(),
+                ownerJWallet: ownerJWalletAddr.toFriendly(),
+                owner: owner.toFriendly()
+            }
+        };
+
+        // let cell = new Cell();
+        // cell.bits.writeAddress(params.owner);
+        // // nodejs buffer
+        // let b64dataBuffer = (await cell.toBoc({ idx: false })).toString("base64");
+        // console.log(b64dataBuffer)
+
+
+        // console.log(beginCell().storeAddress(params.owner).endCell().toBoc({ idx: false }).toString('base64'));
+
+        // todo what's the deal with idx:false
+        
     }
 }
 

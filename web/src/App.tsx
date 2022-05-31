@@ -39,11 +39,12 @@ function MyComp() {
   const myFile: any = useRef(null);
   const [jettonState, setJettonState] = useRecoilState(jettonStateAtom);
   const [jettonParams, setJettonParams] = useState({
-    name: "JUJU Coin",
-    symbol: "JUJ",
+    name: "MyJetton",
+    symbol: "JET",
     mintAmount: 100,
     mintToOwner: true
   });
+  const [jettonData, setJettonData] = useState("")
 
   async function deployContract(transactionSender: TransactionSender, addressStr: string, env: Environments) {
     //@ts-ignore
@@ -80,12 +81,12 @@ function MyComp() {
   return (
     <div className="App">
       <header className="App-header">
-        <div style={{textAlign: 'left'}}>
+        <div style={{ textAlign: 'left' }}>
           <form>
             <div>Name <input type="text" value={jettonParams.name} onChange={(e) => { handleChange(e, "name") }} /></div>
             <div>Symbol <input type="text" value={jettonParams.symbol} onChange={(e) => { handleChange(e, "symbol") }} /></div>
             <div>Amount to mint <input type="number" value={jettonParams.mintAmount} onChange={(e) => { handleChange(e, "mintAmount") }} /></div>
-            <div>Mint to owner <input type="checkbox" defaultChecked disabled/></div>
+            <div>Mint to owner <input type="checkbox" defaultChecked disabled /></div>
             <div>
               <input type='file' onChange={(e) => {
                 myFile.current = e.target.files![0];
@@ -93,8 +94,6 @@ function MyComp() {
             </div>
           </form >
         </div >
-        <br />
-        <br />
         <br />
         <div>
           Jetton: {JettonDeployState[jettonState.state]}
@@ -120,6 +119,29 @@ function MyComp() {
 
           }}>Deploy contract (chromext)</button>
         </div>
+
+        <br />
+        <br />
+        <div>
+          <button disabled={jettonState.state !== JettonDeployState.DONE} onClick={async ()=>{
+            const dep = new JettonDeployController(
+              // @ts-ignore
+              new TonClient({ endpoint: EnvProfiles[Environments.SANDBOX].rpcApi }), // TODO!
+              new ContractDeployer(),
+              new ChromeExtensionTransactionSender() // TODO IRRELEVANT
+            );
+            const details = await dep.getJettonDetails(
+              Address.parse(jettonState.contractAddress!),
+              Address.parse("kQDBQnDNDtDoiX9np244sZmDcEyIYmMcH1RiIxh59SRpKZsb")
+            )
+
+            setJettonData(JSON.stringify(details, null,3));
+          }}>Get jetton details</button>
+          <div>
+            <textarea style={{width: 600, height:400}} value={jettonData}></textarea>
+          </div>
+        </div>
+
       </header >
     </div >
   )
