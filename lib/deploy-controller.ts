@@ -69,7 +69,8 @@ class IPFSUploader {
         const formData = new FormData();
         formData.append('file', data)
 
-        // TODO do we trust this to stay
+        // TODO does it get pinned?
+        // TODO do we trust this to stay 
         const { data: respData } = await axios.post('https://ipfs.infura.io:5001/api/v0/add', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
@@ -189,44 +190,6 @@ function parseGetMethodCall(stack: any[]) {
     });
 }
 
-// export async function doThing() {
-//     const client = new TonClient({
-//         endpoint: api
-//     });
-
-//     const dc = new DeployController(
-//         client,
-//         new MyContractDeployer(),
-//         new TonDeepLinkTransactionSender()
-//         // new PrivKeyTransactionSender()
-//         // new ChromeExtensionTransactionSender()
-//     );
-
-//     await dc.createJetton("kQDBQnDNDtDoiX9np244sZmDcEyIYmMcH1RiIxh59SRpKZsb") // SANDBOX
-//     // await dc.createJetton("EQA6j4K2gZOIG6wHaijLWBf9k6II8FPAAQnSDHyQZNYMndOI") // TESTNET
-
-//     // const addr = "kQDIl8tncyge15Qrn26u2e3JDkRgKx4jzBGAdN-AtehybGGu"
-//     const addr = "kQDQLOmiD-6ngqcXfvJ0EJaBbesa2VcoLrgClc_ARofF-GdP"
-
-//     const isDeployed = await client.isContractDeployed(Address.parse(addr));
-
-//     console.log(isDeployed)
-
-//     const res = await client.callGetMethod(
-//         Address.parse(addr),
-//         "get_jetton_data"
-//     )
-
-//     console.log(res.stack[0][1])
-// }
-
-// (async () => {
-
-//     // await doThing()
-
-
-// })()
-
 enum OPS {
     Mint = 21,
     InternalTransfer = 0x178d4519,
@@ -234,14 +197,13 @@ enum OPS {
 }
 
 class JettonMinter {
-
     static initData(owner: Address, contentUri: string) {
         return beginCell()
-            .storeCoins(17) // TODO Should be 0
+            .storeCoins(0)
             .storeAddress(owner)
             .storeRef(
                 beginCell()
-                    .storeInt(1, 8)
+                    .storeInt(1, 8) // off-chain marker (https://github.com/ton-blockchain/TIPs/issues/64)
                     .storeBuffer(Buffer.from(contentUri, "ascii"))
                     .endCell()
             )
@@ -268,5 +230,4 @@ class JettonMinter {
             )
             .endCell()
     }
-
 }
