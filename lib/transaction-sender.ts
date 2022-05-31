@@ -107,27 +107,34 @@ export class PrivKeyTransactionSender implements TransactionSender {
     }
 }
 
-function encodeBase64URL(buffer: Buffer): string {
-    const ENC: any = {
-        "+": "-",
-        "/": "_",
-        "=": ".",
-    };
-    return buffer.toString('base64')
-        .replace(/[+/=]/g, (m) => {
-            return ENC[m];
-        });
-}
 
 export class TonDeepLinkTransactionSender implements TransactionSender {
+    #deepLinkPrefix: string;
+
+    constructor(deepLinkPrefix: string) {
+        this.#deepLinkPrefix = deepLinkPrefix;
+    }
+
+    #encodeBase64URL(buffer: Buffer): string {
+        const ENC: any = {
+            "+": "-",
+            "/": "_",
+            "=": ".",
+        };
+        return buffer.toString('base64')
+            .replace(/[+/=]/g, (m) => {
+                return ENC[m];
+            });
+    }
+
     async sendTransaction(transactionDetails: TransactionDetails): Promise<void> {
         if (!global['open']) throw new Error("Missing open url web API. Are you running in a browser?")
 
         const INIT_CELL = new Cell()
         transactionDetails.stateInit.writeTo(INIT_CELL);
-        const b64InitCell = encodeBase64URL(INIT_CELL.toBoc())
+        const b64InitCell = this.#encodeBase64URL(INIT_CELL.toBoc())
 
-        const link = `ton-test://transfer/${transactionDetails.to.toFriendly()}?amount=${transactionDetails.value}&init=${b64InitCell}`;
+        const link = `${this.#deepLinkPrefix}://transfer/${transactionDetails.to.toFriendly()}?amount=${transactionDetails.value}&init=${b64InitCell}`;
         open(link)
     }
 }

@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { Address, beginCell, Cell, CommonMessageInfo, InternalMessage, StateInit, toNano, TonClient, Wallet, contractAddress, WalletContract, WalletV3R1Source, WalletV3R2Source, SendMode, CellMessage } from 'ton';
+import { Address, beginCell, Cell, CommonMessageInfo, InternalMessage, StateInit, toNano, TonClient, Wallet, contractAddress, WalletContract, WalletV3R1Source, WalletV3R2Source, SendMode, CellMessage, Slice } from 'ton';
 import fs from 'fs';
 import { data } from '../contracts/jetton-wallet';
 import { mnemonicToWalletKey } from 'ton-crypto';
@@ -15,7 +15,7 @@ export enum JettonDeployState {
     BALANCE_CHECK,
     UPLOAD_IMAGE,
     UPLOAD_METADATA,
-    VERIFY_DEPLOY,
+    AWAITING_DEPLOY,
     VERIFY_MINT
 }
 
@@ -25,6 +25,33 @@ export interface JettonDeployParams {
     jettonName?: string,
     jettonIconImageData?: Buffer
     onProgress?: (state: JettonDeployState, error?: Error, msg?: string) => void
+}
+
+const sleep = async (time: number) => new Promise(resolve => { setTimeout(resolve, time) });
+
+export async function waitForSeqno(wallet: Wallet) {
+    const seqnoBefore = await wallet.getSeqNo();
+
+    return async () => {
+        for (var attempt = 0; attempt < 10; attempt++) {
+            await sleep(3000);
+            const seqnoAfter = await wallet.getSeqNo();
+            if (seqnoAfter > seqnoBefore) return;
+        }
+        throw new Error("Timeout")
+    }
+}
+
+export async function waitForContractDeploy(address: Address, client: TonClient) {
+    let isDeployed = false;
+    let maxTries = 10;
+    while (!isDeployed && maxTries > 0) {
+        maxTries--;
+        isDeployed = await client.isContractDeployed(address);
+        if (isDeployed) return;
+        await sleep(3000);
+    }
+    throw new Error("Timeout");
 }
 
 export class JettonDeployController {
@@ -46,6 +73,8 @@ export class JettonDeployController {
         const balance = await this.#client.getBalance(params.owner);
         if (balance.lt(JETTON_DEPLOY_GAS)) throw new Error("Not enough balance in deployer wallet");
 
+        const ownerWallet = this.#client.openWalletFromAddress({ source: params.owner });
+
         // TODO - how/should we use the deployer here?
 
         /*
@@ -58,21 +87,26 @@ export class JettonDeployController {
         // Assume we've uploaded to IPFS
 
         const ipfsImageLink = "...";
-        const ipfsJsonLinkk = "...";
+        const ipfsJsonLink = "...";
+
+        const waiter = await waitForSeqno(ownerWallet);
+
+        let contractAddr;
 
         try {
-            await this.#contractDeployer.deployContract(
+            contractAddr = await this.#contractDeployer.deployContract(
                 // TODO extract this
                 {
                     code: Cell.fromBoc(minterCode)[0],
                     data: beginCell()
-                        .storeCoins(16)
+                        .storeCoins(16) // TODO Should be 0
                         .storeAddress(params.owner)
-                        .storeRef(beginCell().endCell()) // TODO
+                        .storeRef(beginCell().endCell()) // TODO construct the ipfs url
                         .storeRef(Cell.fromBoc(walletCode)[0])
                         .endCell(),
                     deployer: params.owner,
-                    value: toNano(0.25)
+                    value: toNano(0.25),
+                    dryRun: true
                 },
                 this.#transactionSender
             )
@@ -81,9 +115,32 @@ export class JettonDeployController {
             throw e;
         }
 
+        params.onProgress?.(JettonDeployState.AWAITING_DEPLOY);
+        await waitForContractDeploy(contractAddr, this.#client);
+        params.onProgress?.(JettonDeployState.VERIFY_MINT);
+
+        const res = await this.#client.callGetMethod(
+            contractAddr,
+            "get_jetton_data"
+        )
+
+        const deployedOwnerAddress = (parseGetMethodCall(res.stack)[2] as Cell).beginParse().readAddress()!;
+        if (deployedOwnerAddress.toFriendly() !== params.owner.toFriendly()) throw new Error("BAH!")
     }
 }
 
+function parseGetMethodCall(stack: any[]) {
+    return stack.map(([type, val]) => {
+        switch (type) {
+            case 'num':
+                return new BN(val.replace('0x',''),'hex')
+            case 'cell':
+                return Cell.fromBoc(Buffer.from(val.bytes, 'base64'))[0]
+            default:
+                throw new Error('unknown type')
+        }
+    })
+}
 
 // export async function doThing() {
 //     const client = new TonClient({

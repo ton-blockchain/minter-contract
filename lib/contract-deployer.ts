@@ -23,17 +23,22 @@ interface ContractDeployDetails {
     code: Cell,
     data: Cell,
     message?: any // TODO
+    dryRun?: boolean
 }
 
 export class ContractDeployer {
-    async deployContract(contract: ContractDeployDetails, transactionSender: TransactionSender): Promise<void> {
-        const minterAddress = contractAddress({ workchain: 0, initialData: contract.data, initialCode: contract.code });
+    async deployContract(params: ContractDeployDetails, transactionSender: TransactionSender): Promise<Address> {
+        const _contractAddress = contractAddress({ workchain: 0, initialData: params.data, initialCode: params.code });
 
-        await transactionSender.sendTransaction({
-            to: minterAddress,
-            value: contract.value,
-            stateInit: new StateInit({ data: contract.data, code: contract.code }),
-            message: null
-        });
+        if (!params.dryRun) {
+            await transactionSender.sendTransaction({
+                to: _contractAddress,
+                value: params.value,
+                stateInit: new StateInit({ data: params.data, code: params.code }),
+                message: null
+            });
+        }
+
+        return _contractAddress
     }
 }

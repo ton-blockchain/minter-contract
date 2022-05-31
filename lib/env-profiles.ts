@@ -1,5 +1,6 @@
 interface Env {
-    rpcApi: string
+    rpcApi: string,
+    deepLinkPrefix: string
 }
 
 export enum Environments {
@@ -10,7 +11,7 @@ export enum Environments {
 
 
 export const EnvProfiles = {
-    [Environments.SANDBOX]: { rpcApi: "https://sandbox.tonhubapi.com/jsonRPC" }
+    [Environments.SANDBOX]: { rpcApi: "https://sandbox.tonhubapi.com/jsonRPC", deepLinkPrefix: "ton-test" }
 };
 
 // "https://testnet-api.scaleton.io"
