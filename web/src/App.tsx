@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import logo from './logo.svg';
+import { useForm, Controller } from "react-hook-form";
+import { FormControl, InputLabel, Input, FormHelperText, TextField } from '@mui/material';
+
 import './App.css';
 import { JettonDeployState, TransactionSender, JettonDeployController, EnvProfiles, Environments, ContractDeployer, TonDeepLinkTransactionSender, ChromeExtensionTransactionSender } from 'tonstarter-contracts';
 import {
@@ -11,31 +13,154 @@ import {
 } from 'recoil';
 import { Address, TonClient, toNano } from 'ton';
 import { JettonDeployParams } from '../../lib/deploy-controller';
-// setTimeout(() => {
-//   const x = new Module.default()
-//   x.createJetton()
-// }, 1);
-
 
 const jettonStateAtom = atom({
   key: 'jettonState', // unique ID (with respect to other atoms/selectors)
   default: {
     state: JettonDeployState.NOT_STARTED,
-    contractAddress: null
+    contractAddress: null,
+    jWalletAddress: null
   }, // default value (aka initial value)
 });
-
 
 function App() {
   return (
     <RecoilRoot>
-      <MyComp />
+      {/* <MyComp /> */}
+      {/* <Formtsy /> */}
+      <div className="App">
+        <Formtsy2 />
+      </div>
     </RecoilRoot>
   );
 }
 
-function MyComp() {
+function Formtsy() {
 
+  const { register, handleSubmit, watch, formState: { errors } } = useForm();
+  const onSubmit = (data: any) => console.log(data);
+
+  console.log(watch("example")); // watch input value by passing the name of it
+
+  return (
+    /* "handleSubmit" will validate your inputs before invoking "onSubmit" */
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {/* register your input into the hook by invoking the "register" function */}
+      <input defaultValue="test" {...register("example")} />
+
+      {/* include validation with required or other standard HTML validation rules */}
+      <input {...register("exampleRequired", { required: true })} />
+      {/* errors will return when field validation fails  */}
+      {errors.exampleRequired && <span>This field is required</span>}
+
+      <input type="submit" />
+    </form>
+  );
+}
+
+interface JettonForm {
+  name?: string,
+  symbol?: string,
+  initialSupply?: number
+  maxSupply?: number
+  tokenDecimals?: number
+}
+
+enum Networks {
+  Mainnet,
+  Sandbox,
+  Testnet
+}
+
+const formSpec = {
+  name: {
+    title: 'Name',
+    helper: 'Choose a name for your token',
+    type: 'text',
+    default: ''
+  },
+  symbol: {
+    title: 'Symbol',
+    helper: 'Choose a symbol for your token (usually 3-5 chars)',
+    type: 'text',
+    inputStyle: { textTransform: 'uppercase' },
+    default: ''
+  },
+  initialSupply: {
+    title: 'Initial supply',
+    helper: 'Initial supply of token. usually 0?',
+    type: 'number',
+    disabled: true,
+    default: 0
+  },
+  maxSupply: {
+    title: 'Max supply',
+    helper: 'Not yet supported',
+    type: 'number',
+    disabled: true,
+    default: 0
+  },
+  decimals: {
+    title: 'Token decimals',
+    helper: 'The decimal precision of your token',
+    type: 'number',
+    disabled: true,
+    default: 9
+  },
+  network: {
+    title: 'Network',
+    helper: 'Choose network',
+    type: 'select',
+    default: Networks.Mainnet,
+    options: [Networks.Mainnet, Networks.Sandbox, Networks.Testnet]
+  },
+}
+
+const defaults: JettonForm = {}
+
+Object.entries(formSpec).forEach(([k, v]) => {
+  // @ts-ignore
+  defaults[k] = v.default
+});
+
+const formStateAtom = atom({
+  key: 'formState', // unique ID (with respect to other atoms/selectors)
+  default: defaults
+});
+
+function Formtsy2() {
+
+  // const { register, handleSubmit, watch, formState: { errors }, control } = useForm();
+
+  // console.log(watch("koko")); // watch input value by passing the name of it
+  const [formState, setFormState] = useRecoilState(formStateAtom);
+
+  const formStateSetter = ((e: any, k: string) => {
+    setFormState(o => ({ ...o, [k]: e.target.value }));
+  });
+
+  return (
+    <form style={{ display: 'flex', flexDirection: 'column', gap: 20, width: 500 }}>
+      {
+        Object.entries(formSpec).map((([k, v]) => {
+          //@ts-ignore
+          const {disabled, helper, type, title, inputStyle} = formSpec[k];
+
+          if (type) // TODO select
+
+          return <TextField
+            key={k}
+            onChange={e => { formStateSetter(e, "name") }} 
+            // @ts-ignore
+            value={formState[k]} disabled={disabled} helperText={helper} type={type} label={title} inputProps={{style: inputStyle}} />
+        }))
+      }
+    </form>
+
+  )
+}
+
+function MyComp() {
   const myFile: any = useRef(null);
   const [jettonState, setJettonState] = useRecoilState(jettonStateAtom);
   const [jettonParams, setJettonParams] = useState({
@@ -103,30 +228,33 @@ function MyComp() {
         </div>
         <div>
           <button onClick={async () => {
-
+            await deployContract(
+              new TonDeepLinkTransactionSender(EnvProfiles[Environments.MAINNET].deepLinkPrefix),
+              "EQDerEPTIh0O8lBdjWc6aLaJs5HYqlfBN2Ruj1lJQH_6vcaZ",
+              Environments.MAINNET
+            );
+          }}>Deploy contract (tonhubMAINNET)</button>
+          <button onClick={async () => {
             await deployContract(
               new TonDeepLinkTransactionSender(EnvProfiles[Environments.SANDBOX].deepLinkPrefix),
               "kQDBQnDNDtDoiX9np244sZmDcEyIYmMcH1RiIxh59SRpKZsb",
               Environments.SANDBOX
             );
-
           }}>Deploy contract (tonhub)</button>
           <button onClick={async () => {
-
             // @ts-ignore
             const x = await window.ton!.send('ton_requestWallets')
             await deployContract(new ChromeExtensionTransactionSender(), x[0].address, Environments.TESTNET);
-
           }}>Deploy contract (chromext)</button>
         </div>
 
         <br />
         <br />
         <div>
-          <button disabled={jettonState.state !== JettonDeployState.DONE} onClick={async ()=>{
+          <button disabled={jettonState.state !== JettonDeployState.DONE} onClick={async () => {
             const dep = new JettonDeployController(
               // @ts-ignore
-              new TonClient({ endpoint: EnvProfiles[Environments.SANDBOX].rpcApi }), // TODO!
+              new TonClient({ endpoint: EnvProfiles[Environments.MAINNET].rpcApi }), // TODO!
               new ContractDeployer(),
               new ChromeExtensionTransactionSender() // TODO IRRELEVANT
             );
@@ -135,10 +263,10 @@ function MyComp() {
               Address.parse("kQDBQnDNDtDoiX9np244sZmDcEyIYmMcH1RiIxh59SRpKZsb")
             )
 
-            setJettonData(JSON.stringify(details, null,3));
+            setJettonData(JSON.stringify(details, null, 3));
           }}>Get jetton details</button>
           <div>
-            <textarea style={{width: 600, height:400}} value={jettonData}></textarea>
+            <textarea style={{ width: 600, height: 400 }} value={jettonData} readOnly></textarea>
           </div>
         </div>
 
@@ -148,3 +276,16 @@ function MyComp() {
 }
 
 export default App;
+
+
+/*
+TODOs:
+- Testing for lib
+- Coverage for project
+- Merge web and lib?
+- Merge contract tests and libtests?
+- Onchain persistence
+- Infura IPFS api key? can be later
+- Prepare spec
+- Improve UI to allow transferring + links to scanners
+*/
