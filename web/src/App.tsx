@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useForm, Controller } from "react-hook-form";
-import { FormControl, InputLabel, Input, FormHelperText, TextField } from '@mui/material';
+import { Skeleton, List, ListItemText, ListItem, Card, FormControl, Typography, Button, MenuItem, CardContent, InputLabel, Input, FormHelperText, TextField, Select } from '@mui/material';
 
 import './App.css';
 import { JettonDeployState, TransactionSender, JettonDeployController, EnvProfiles, Environments, ContractDeployer, TonDeepLinkTransactionSender, ChromeExtensionTransactionSender } from 'tonstarter-contracts';
@@ -29,10 +29,57 @@ function App() {
       {/* <MyComp /> */}
       {/* <Formtsy /> */}
       <div className="App">
-        <Formtsy2 />
+        <div style={{ display: 'flex', flexDirection: 'row', gap: 50 }}>
+          <Formtsy2 />
+          <FormDeployStatus />
+        </div>
       </div>
     </RecoilRoot>
   );
+}
+
+const deployStateAtom = atom({
+  key: 'deployState',
+  default: {
+    state: JettonDeployState.NOT_STARTED,
+    contractAddress: null,
+    jWalletAddress: null,
+    jWalletBalance: null
+  },
+});
+
+function FormDeployStatus() {
+  const [state, setState] = useRecoilState(deployStateAtom);
+
+  return <div>
+    <List
+      sx={{
+        width: '100%',
+        maxWidth: 360,
+        bgcolor: 'background.paper',
+      }}
+    >
+      <ListItem>
+        <ListItemText primary="Contract Address" secondary={state.contractAddress} />
+      </ListItem>
+      <ListItem>
+        <ListItemText primary="JWallet Address" secondary={state.jWalletAddress} />
+      </ListItem>
+      <ListItem>
+        <ListItemText primary="JWallet Balance" secondary={state.jWalletBalance} />
+      </ListItem>
+      <ListItem>
+        <Card>
+          <CardContent>
+            <div>Raw content</div>
+            <br />
+            {/* <code>{JSON.stringify({koko: 1})}</code> */}
+            {/* <Skeleton variant="rectangular" width={210} height={118} /> */}
+          </CardContent>
+        </Card>
+      </ListItem>
+    </List>
+  </div>
 }
 
 function Formtsy() {
@@ -112,7 +159,21 @@ const formSpec = {
     helper: 'Choose network',
     type: 'select',
     default: Networks.Mainnet,
-    options: [Networks.Mainnet, Networks.Sandbox, Networks.Testnet]
+    options: [Networks.Mainnet, Networks.Sandbox, Networks.Testnet],
+    optionToDisplayName: (o: Networks) => Networks[o]
+  },
+  mintToOwner: {
+    title: 'Mint to owner',
+    helper: 'Amount of jetton to transfer to owner jwallet',
+    type: 'number',
+    default: 100
+  },
+  gasFee: {
+    title: 'Gas fee',
+    helper: 'Amount of to send from your wallet to jetton contract for gas and rent',
+    type: 'number',
+    disabled: true,
+    default: 0.3
   },
 }
 
@@ -139,22 +200,39 @@ function Formtsy2() {
     setFormState(o => ({ ...o, [k]: e.target.value }));
   });
 
+  // console.log(formState)
+
   return (
     <form style={{ display: 'flex', flexDirection: 'column', gap: 20, width: 500 }}>
       {
         Object.entries(formSpec).map((([k, v]) => {
           //@ts-ignore
-          const {disabled, helper, type, title, inputStyle} = formSpec[k];
+          const { disabled, helper, type, title, inputStyle, options, optionToDisplayName } = formSpec[k];
 
-          if (type) // TODO select
+          if (type === 'select') {
+            return <Select
+              key={k}
+              onChange={(e: any) => { formStateSetter(e, k) }}
+              // @ts-ignore
+              value={formState[k]} disabled={disabled} helperText={helper} type={type} label={title} inputProps={{ style: inputStyle }}>
+              {options.map((o: any) => <MenuItem key={o} value={o}>{optionToDisplayName(o)}</MenuItem>)}
+            </Select>
+          }
 
+          // @ts-ignore
           return <TextField
             key={k}
-            onChange={e => { formStateSetter(e, "name") }} 
+            onChange={(e: any) => { formStateSetter(e, k) }}
             // @ts-ignore
-            value={formState[k]} disabled={disabled} helperText={helper} type={type} label={title} inputProps={{style: inputStyle}} />
+            value={formState[k]} disabled={disabled} helperText={helper} type={type} label={title} inputProps={{ style: inputStyle }} />
         }))
       }
+      {/* TODO validations */}
+      <input type='file' onChange={(e) => {
+        // myFile.current = e.target.files![0];
+      }} />
+     
+      <Button variant="contained">Deploy Jetton</Button>
     </form>
 
   )
