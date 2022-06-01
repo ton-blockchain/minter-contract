@@ -1,25 +1,23 @@
-import { ContractDeployer } from '../lib/contract-deployer';
-import { Address, Cell, toNano } from 'ton';
-import { randomAddress } from './helpers';
-import { TransactionDetails, TransactionSender } from '../lib/transaction-sender';
-import { expect } from 'chai';
+import { ContractDeployer } from "../lib/contract-deployer";
+import { Address, Cell, toNano } from "ton";
+import { randomAddress } from "./helpers";
+import { TransactionDetails, TransactionSender } from "../lib/transaction-sender";
+import chai, { expect } from "chai";
+import * as sinon from "ts-sinon";
+import sinonChai from "sinon-chai";
 
-class MockTransactionSender implements TransactionSender {
-    sendTransaction(transactionDetails: TransactionDetails): Promise<void> {
-        // throw new Error('Method not implemented.');
-    }
-}
+chai.use(sinonChai);
 
 describe("Contract Deployer", () => {
-
     it("invokes the transaction sender", async () => {
-        const x = await new ContractDeployer().deployContract({
+        const transactionSenderStub = sinon.stubInterface<TransactionSender>();
+        const contractAddr = await new ContractDeployer().deployContract({
             deployer: randomAddress("owner"),
             value: toNano(0.25),
             code: new Cell(),
-            data: new Cell()
-        }, new MockTransactionSender())
-        expect(x.toFriendly()).to.equal("koko");
+            data: new Cell(),
+        }, transactionSenderStub);
+        expect(transactionSenderStub.sendTransaction).to.have.been.calledOnce;
+        expect(contractAddr.toFriendly()).to.equal("EQCtMet2LmiPwbohV11DWbD5xIc4r2U-FmojMwC9xrKa6fCK");
     });
-
 });

@@ -1,21 +1,6 @@
 import { TransactionSender } from "./transaction-sender";
-import { ContractDeployDetails } from "./deploy-controller";
 import BN from "bn.js";
 import { Address, Cell, contractAddress, StateInit } from "ton";
-
-// export class DeployControllerFactory {
-//     static create(): DeployController {
-//         const client = new TonClient({
-//             endpoint: "https://mainnet.tonhubapi.com/jsonRPC" // `https://${process.env.TESTNET ? 'testnet.' : ''}toncenter.com/api/v2/jsonRPC`, 
-//             // apiKey: process.env.TESTNET ? process.env.TESTNET_API_KEY : process.env.MAINNET_API_KEY
-//         });
-//         return new DeployController(
-//             client,
-//             new MyContractDeployer(),
-//             new TonChromeExtTransactionSender(),
-//         )
-//     }
-// }
 
 interface ContractDeployDetails {
     deployer: Address,
@@ -43,6 +28,6 @@ export class ContractDeployer {
             });
         }
 
-        return _contractAddress
+        return _contractAddress;
     }
 }
