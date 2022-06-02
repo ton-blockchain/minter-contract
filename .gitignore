@@ -4,3 +4,5 @@ node_modules
 bin
 test3
 tonwallets/wallets
+.nyc_output
+tonwallets

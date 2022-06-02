@@ -11,10 +11,11 @@ import path from "path";
 import process from "process";
 import child_process from "child_process";
 import glob from "fast-glob";
+import { Cell } from "ton";
 
 async function main() {
-  console.log(`=================================================================`);
-  console.log(`Build script running, let's find some FunC contracts to compile..`);
+  console.log("=================================================================");
+  console.log("Build script running, let's find some FunC contracts to compile..");
 
   // if we have an explicit bin directory, use the executables there (needed for glitch.com)
   if (fs.existsSync("bin")) {
@@ -26,9 +27,9 @@ async function main() {
   let funcVersion = "";
   try {
     funcVersion = child_process.execSync("func -V").toString();
-  } catch (e) {}
-  if (!funcVersion.includes(`Func build information`)) {
-    console.log(`\nFATAL ERROR: 'func' executable is not found, is it installed and in path?`);
+  } catch (e) {/*ignore*/}
+  if (!funcVersion.includes("Func build information")) {
+    console.log("\nFATAL ERROR: 'func' executable is not found, is it installed and in path?");
     process.exit(1);
   }
 
@@ -37,8 +38,8 @@ async function main() {
   try {
     fiftVersion = child_process.execSync("fift -V").toString();
   } catch (e) {}
-  if (!fiftVersion.includes(`Fift build information`)) {
-    console.log(`\nFATAL ERROR: 'fift' executable is not found, is it installed and in path?`);
+  if (!fiftVersion.includes("Fift build information")) {
+    console.log("\nFATAL ERROR: 'fift' executable is not found, is it installed and in path?");
     process.exit(1);
   }
 
@@ -70,6 +71,11 @@ async function main() {
       console.log(` - Deleting old build artifact '${cellArtifact}'`);
       fs.unlinkSync(cellArtifact);
     }
+    const hexArtifact = `build/${contractName}-hex.json`;
+    if (fs.existsSync(hexArtifact)) {
+      console.log(` - Deleting old build artifact '${hexArtifact}'`);
+      fs.unlinkSync(hexArtifact);
+    }
 
     // check if we have a tlb file
     const tlbFile = `contracts/${contractName}.tlb`;
@@ -89,7 +95,7 @@ async function main() {
 
     // create a merged fc file with source code from all dependencies
     let sourceToCompile = "";
-    const importFiles = glob.sync([`contracts/imports/*.fc`, `contracts/imports/*.func`, `contracts/imports/${contractName}/*.fc`, `contracts/imports/${contractName}/*.func`]);
+    const importFiles = glob.sync(["contracts/imports/*.fc", "contracts/imports/*.func", `contracts/imports/${contractName}/*.fc`, `contracts/imports/${contractName}/*.func`]);
     for (const importFile of importFiles) {
       console.log(` - Adding import '${importFile}'`);
       sourceToCompile += `${fs.readFileSync(importFile).toString()}\n`;
@@ -103,11 +109,11 @@ async function main() {
     console.log(` - Trying to compile '${mergedFuncArtifact}' with 'func' compiler..`);
     const buildErrors = child_process.execSync(`func -APS -o build/${contractName}.fif ${mergedFuncArtifact} 2>&1 1>node_modules/.tmpfunc`).toString();
     if (buildErrors.length > 0) {
-      console.log(` - OH NO! Compilation Errors! The compiler output was:`);
+      console.log(" - OH NO! Compilation Errors! The compiler output was:");
       console.log(`\n${buildErrors}`);
       process.exit(1);
     } else {
-      console.log(` - Compilation successful!`);
+      console.log(" - Compilation successful!");
     }
 
     // make sure fif build artifact was created
@@ -119,7 +125,7 @@ async function main() {
     }
 
     // create a temp cell.fif that will generate the cell
-    let fiftCellSource = `"Asm.fif" include\n`;
+    let fiftCellSource = "\"Asm.fif\" include\n";
     fiftCellSource += `${fs.readFileSync(fiftArtifact).toString()}\n`;
     fiftCellSource += `boc>B "${cellArtifact}" B>file`;
     fs.writeFileSync(fiftCellArtifact, fiftCellSource);
@@ -128,7 +134,7 @@ async function main() {
     try {
       child_process.execSync(`fift ${fiftCellArtifact}`);
     } catch (e) {
-      console.log(`FATAL ERROR: 'fift' executable failed, is FIFTPATH env variable defined?`);
+      console.log("FATAL ERROR: 'fift' executable failed, is FIFTPATH env variable defined?");
       process.exit(1);
     }
 
@@ -140,9 +146,20 @@ async function main() {
       console.log(` - Build artifact created '${cellArtifact}'`);
       fs.unlinkSync(fiftCellArtifact);
     }
+
+    fs.writeFileSync(hexArtifact, JSON.stringify({hex: Cell.fromBoc(fs.readFileSync(cellArtifact))[0].toBoc().toString("hex")}));
+
+    // make sure hex artifact was created
+    if (!fs.existsSync(hexArtifact)) {
+      console.log(` - For some reason '${hexArtifact}' was not created!`);
+      process.exit(1);
+    } else {
+      console.log(` - Build artifact created '${hexArtifact}'`);
+      fs.unlinkSync(cellArtifact);
+    }
   }
 
-  console.log(``);
+  console.log("");
 }
 
 main();
@@ -152,7 +169,7 @@ main();
 function crc32(r: string) {
   for (var a, o = [], c = 0; c < 256; c++) {
     a = c;
-    for (var f = 0; f < 8; f++) a = 1 & a ? 3988292384 ^ (a >>> 1) : a >>> 1;
+    for (let f = 0; f < 8; f++) a = 1 & a ? 3988292384 ^ (a >>> 1) : a >>> 1;
     o[c] = a;
   }
   for (var n = -1, t = 0; t < r.length; t++) n = (n >>> 8) ^ o[255 & (n ^ r.charCodeAt(t))];

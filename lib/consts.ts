@@ -1,1 +1,1 @@
-export const WORKCHAIN = 0
+export const WORKCHAIN = 0;
