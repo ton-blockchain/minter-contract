@@ -1,6 +1,7 @@
 import BN from "bn.js";
 import { Address, Cell, Slice, TonClient, contractAddress, beginCell } from "ton";
 import { addressToCell } from "../test/deploy-controller.spec";
+import { SmartContract } from "ton-contract-executor";
 
 interface Executor {
   invokeGetMethod(methodName: string, params?: any[]): Promise<(BN | Cell)[]>;
@@ -68,6 +69,40 @@ export class TonClientExecutor implements Executor {
 }
 
 
+export class TestSuiteExecutor implements Executor {
+  #contract: SmartContract;
+  constructor(contract: SmartContract) {
+    this.#contract = contract;
+  }
+
+  #parseGetMethodCall(stack: any[]) {
+    return stack.map((o) => {
+      if (o instanceof Slice) return o.toCell();
+      return o;
+    });
+  }
+
+  #prepareParams(params: any[] = []) {
+    return params.map((p) => {
+      if (p instanceof Cell) {
+        // TODO what's idx:false
+        return {
+          type: "cell_slice",
+          value: p.toBoc({ idx: false }).toString("base64"),
+        };
+      }
+
+      throw new Error("unknown type!");
+    });
+  }
+
+  async invokeGetMethod(methodName: string, params?: any[]): Promise<(BN | Cell)[]> {
+    const res = await this.#contract.invokeGetMethod(methodName, this.#prepareParams(params));
+    return this.#parseGetMethodCall(res.result);
+  }
+}
+
+
 interface JettonDetails {
   totalSupply: BN;
   address: Address;
@@ -83,7 +118,7 @@ class ZContract {
 
 export class JettonMinterContract extends ZContract {
   async getJettonDetails(): Promise<JettonDetails> {
-    const res = await this.executor.invokeGetMethod("get_jetton_details");
+    const res = await this.executor.invokeGetMethod("get_jetton_data");
     const contentUriSlice = (res[3] as Cell).beginParse(); // TODO support onchain
     contentUriSlice.readInt(8);
 

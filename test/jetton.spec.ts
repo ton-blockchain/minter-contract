@@ -15,6 +15,7 @@ import { JettonMinter } from "./lib/jetton-minter";
 import { actionToMessage } from "./lib/utils";
 import { JettonWallet } from "./lib/jetton-wallet";
 import { JETTON_MINTER_CODE, JETTON_WALLET_CODE } from "../contracts/jetton-minter";
+import { JettonMinterContract, TestSuiteExecutor } from "../ton-helpers/my-executor";
 
 const OWNER_ADDRESS = randomAddress("owner");
 const PARTICIPANT_ADDRESS_1 = randomAddress("participant_1");
@@ -40,8 +41,11 @@ describe("Jetton", () => {
   });
 
   it("should get minter initialization data correctly", async () => {
-    const call = await minterContract.contract.invokeGetMethod("get_jetton_data", []);
-    const { totalSupply, address, contentUri } = parseJettonDetails(call);
+    const myCtrct = new JettonMinterContract(new TestSuiteExecutor(minterContract.contract)); // TODO continue with this
+    const { totalSupply, address, contentUri } = await myCtrct.getJettonDetails();
+    
+    // const call = await minterContract.contract.invokeGetMethod("get_jetton_data", []);
+    // const { totalSupply, address, contentUri } = parseJettonDetails(call);
 
     expect(totalSupply).to.be.bignumber.equal(new BN(0));
     expect(address.toFriendly()).to.equal(OWNER_ADDRESS.toFriendly());
