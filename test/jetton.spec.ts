@@ -14,13 +14,12 @@ import { WrappedSmartContract } from "./lib/contract-deployer";
 import { JettonMinter } from "./lib/jetton-minter";
 import { actionToMessage } from "./lib/utils";
 import { JettonWallet } from "./lib/jetton-wallet";
+import { JETTON_MINTER_CODE, JETTON_WALLET_CODE } from "../contracts/jetton-minter";
 
 const OWNER_ADDRESS = randomAddress("owner");
 const PARTICIPANT_ADDRESS_1 = randomAddress("participant_1");
 const PARTICIPANT_ADDRESS_2 = randomAddress("participant_2");
 
-export const JETTON_WALLET_CODE = Cell.fromBoc(fs.readFileSync("build/jetton-wallet.cell"))[0];
-const JETTON_MINTER_CODE = Cell.fromBoc(fs.readFileSync("build/jetton-minter.cell"))[0]; // code cell from build output
 
 describe("Jetton", () => {
   let minterContract: JettonMinter;
@@ -36,13 +35,7 @@ describe("Jetton", () => {
     );
 
   beforeEach(async () => {
-    const dataCell = jetton_minter.data({
-      adminAddress: OWNER_ADDRESS,
-      totalSupply: new BN(0),
-      offchainUri: "https://api.jsonbin.io/b/628ced3405f31f68b3a53622",
-      jettonWalletCode: JETTON_WALLET_CODE,
-    });
-
+    const dataCell = jetton_minter.initData(OWNER_ADDRESS,"https://api.jsonbin.io/b/628ced3405f31f68b3a53622");
     minterContract = (await JettonMinter.create(JETTON_MINTER_CODE, dataCell)) as JettonMinter; // TODO: 🤮;
   });
 

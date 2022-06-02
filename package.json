@@ -6,7 +6,7 @@
   "author": "",
   "scripts": {
     "prettier": "npx prettier --write '{test,contracts,build}/**/*.{ts,js,json}'",
-    "test": "mocha --exit test/**/*.spec.ts",
+    "test": "mocha  --exit test/**/*.spec.ts",
     "test:coverage": "nyc mocha --exit test/**/*.spec.ts",
     "test:watch": "mocha --watch --watch-files test/**/*.ts,lib/**/*.ts test/**/*.spec.ts",
     "build": "ts-node ./build/_build.ts",
