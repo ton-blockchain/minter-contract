@@ -26,7 +26,6 @@ describe("Deploy Controller", () => {
   const cellToB64GetCall = (cell: Cell) => ["cell", { bytes: cell.toBoc().toString("base64") }];
   const addressToB64GetCell = (address: Address) => cellToB64GetCall(beginCell().storeAddress(address).endCell());
 
-
   const deployPayload = {
     amountToMint: toNano(0),
     jettonName: "",
@@ -45,8 +44,8 @@ describe("Deploy Controller", () => {
     fileUploaderStub.upload.resolves("");
     tonClient = sinon.stubConstructor(TonClient, { endpoint: "" });
     contractDeployer = sinon.stubConstructor(ContractDeployer);
-    contractDeployer.addressForContract.returns(randomAddress("randAddr"));
-    contractDeployer.deployContract.resolves(randomAddress("randAddrs"));
+    contractDeployer.addressForContract.returns(randomAddress("minterAddr"));
+    contractDeployer.deployContract.resolves(randomAddress("minterAddr"));
     deployController = new JettonDeployController(tonClient);
   });
 
@@ -54,18 +53,11 @@ describe("Deploy Controller", () => {
     tonClient.isContractDeployed.onFirstCall().resolves(false).onSecondCall().resolves(true).onThirdCall().resolves(true);
     tonClient.getBalance.resolves(toNano(1));
 
-    const stubGetJettonDataResponse = (stub: sinon.StubbedInstance<TonClient>, initialSupply: BN, ownerAddress: Address) => {
-        stub.callGetMethod.withArgs(randomAddress("minterAddr"), "get_jetton_data").resolves({...retVal, stack: [
-            stubNumVal(initialSupply), 
-            stubNumVal(new BN(0)), 
-            addressToB64GetCell(ownerAddress)
-        ]});
-    };
-
-    stubGetJettonDataResponse(tonClient, new BN(0),randomAddress("owner"));
     tonClient.callGetMethod.callsFake(async (address: Address, name: string, params?: any[]) => {
-      if (name === "get_wallet_address") {
-        retVal.stack = [cellToB64GetCall(beginCell().storeAddress(randomAddress("jwalletaddr")).endCell())];
+      if (name === "get_jetton_data") {
+        retVal.stack = [stubNumVal(new BN(0)), stubNumVal(new BN(0)), addressToB64GetCell(randomAddress("owner"))];
+      } else if (name === "get_wallet_address") {
+        retVal.stack = [addressToB64GetCell(randomAddress("jwalletAddr"))];
       } else if (name === "get_wallet_data") {
         retVal.stack = [stubNumVal(new BN(0))];
       }
@@ -73,7 +65,7 @@ describe("Deploy Controller", () => {
       return retVal;
     });
 
-    await deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub);
+    // await deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub);
     await expect(deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.fulfilled;
     expect(fileUploaderStub.upload).to.have.been.calledTwice;
     expect(contractDeployer.deployContract).to.have.been.calledOnce;
@@ -96,7 +88,7 @@ describe("Deploy Controller", () => {
     });
 
     // await deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub);
-    await expect(deployController.createJetton({...deployPayload, amountToMint: toNano(1)}, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.rejected;
+    await expect(deployController.createJetton({ ...deployPayload, amountToMint: toNano(1) }, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.rejected;
     expect(fileUploaderStub.upload).to.have.been.calledTwice;
     expect(contractDeployer.deployContract).to.have.been.calledOnce;
   });
@@ -155,4 +147,3 @@ describe("Deploy Controller", () => {
     await expect(deployController.getJettonDetails(randomAddress("minteraddr"), randomAddress("jwalletowneraddr"))).to.be.fulfilled;
   });
 });
-
