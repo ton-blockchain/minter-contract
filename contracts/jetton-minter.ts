@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { Cell, beginCell, Address, toNano } from "ton";
+import { Cell, beginCell, Address, toNano, Slice } from "ton";
 
 const OFFCHAIN_CONTENT_PREFIX = 0x01;
 
@@ -48,4 +48,27 @@ export function mintBody(owner: Address, jettonValue: BN): Cell {
         .endCell()
     )
     .endCell();
+}
+
+interface JettonDetails {
+  totalSupply: BN;
+  address: Address;
+  contentUri: string;
+}
+
+function parseContentField(content: Slice): string {
+  content.readInt(8);
+  return content.readRemainingBytes().toString("ascii");
+}
+
+export function parseJettonDetails(execResult: { result: any[] }): JettonDetails {
+  return {
+    totalSupply: execResult.result[0] as BN,
+    address: (execResult.result[2] as Slice).readAddress() as Address,
+    contentUri: parseContentField((execResult.result[3] as Cell).beginParse()),
+  };
+}
+
+export function getWalletAddress(stack: any[]): Address {
+  return stack[0][1].bytes[0].beginParse().readAddress()!;
 }

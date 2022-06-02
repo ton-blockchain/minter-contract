@@ -78,6 +78,8 @@ export class JettonDeployController {
 
     const jettonDataRes = await this.#client.callGetMethod(contractAddr, "get_jetton_data");
 
+    // const parseGetMethodCall(jettonDataRes.stack)
+
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const deployedOwnerAddress = (parseGetMethodCall(jettonDataRes.stack)[2] as Cell).beginParse().readAddress()!;
     if (deployedOwnerAddress.toFriendly() !== params.owner.toFriendly()) throw new Error("Contract deployed incorrectly");
