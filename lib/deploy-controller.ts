@@ -76,30 +76,26 @@ export class JettonDeployController {
       await waitForContractDeploy(contractAddr, this.#client);
     }
 
-    const res = await this.#client.callGetMethod(contractAddr, "get_jetton_data");
+    const jettonDataRes = await this.#client.callGetMethod(contractAddr, "get_jetton_data");
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const deployedOwnerAddress = (parseGetMethodCall(res.stack)[2] as Cell).beginParse().readAddress()!;
+    const deployedOwnerAddress = (parseGetMethodCall(jettonDataRes.stack)[2] as Cell).beginParse().readAddress()!;
     if (deployedOwnerAddress.toFriendly() !== params.owner.toFriendly()) throw new Error("Contract deployed incorrectly");
 
-    // const contentCell = (parseGetMethodCall(res.stack)[3] as Cell).beginParse();
-    // contentCell.readInt(8);
-    // console.log("contentURI:" + contentCell.readRemainingBytes().toString('ascii'))
-
     // todo what's the deal with idx:false
-    const res2 = await this.#client.callGetMethod(contractAddr, "get_wallet_address", [
+    const jwalletAddressRes = await this.#client.callGetMethod(contractAddr, "get_wallet_address", [
       ["tvm.Slice", beginCell().storeAddress(params.owner).endCell().toBoc({ idx: false }).toString("base64")],
     ]);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const ownerJWalletAddr = (parseGetMethodCall(res2.stack)[0] as Cell).beginParse().readAddress()!;
+    const ownerJWalletAddr = (parseGetMethodCall(jwalletAddressRes.stack)[0] as Cell).beginParse().readAddress()!;
 
     params.onProgress?.(JettonDeployState.AWAITING_MINTER_DEPLOY);
     await waitForContractDeploy(ownerJWalletAddr, this.#client);
 
     params.onProgress?.(JettonDeployState.VERIFY_MINT, undefined, contractAddr.toFriendly()); // TODO better way of emitting the contract?
 
-    const res3 = await this.#client.callGetMethod(ownerJWalletAddr, "get_wallet_data");
-    if (!(parseGetMethodCall(res3.stack)[0] as BN).eq(params.amountToMint)) throw new Error("Mint fail");
+    const jwalletDataRes = await this.#client.callGetMethod(ownerJWalletAddr, "get_wallet_data");
+    if (!(parseGetMethodCall(jwalletDataRes.stack)[0] as BN).eq(params.amountToMint)) throw new Error("Mint fail");
     params.onProgress?.(JettonDeployState.DONE);
   }
 

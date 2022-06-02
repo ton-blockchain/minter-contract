@@ -22,8 +22,10 @@ describe("Deploy Controller", () => {
   let deployController: JettonDeployController;
 
   const retVal = { gas_used: 0, stack: [] };
-  const stubNumVal = ["num", "0"];
+  const stubNumVal = (num: BN) => ["num", num.toString()];
   const cellToB64GetCall = (cell: Cell) => ["cell", { bytes: cell.toBoc().toString("base64") }];
+  const addressToB64GetCell = (address: Address) => cellToB64GetCall(beginCell().storeAddress(address).endCell());
+
 
   const deployPayload = {
     amountToMint: toNano(0),
@@ -32,6 +34,9 @@ describe("Deploy Controller", () => {
     owner: randomAddress("owner"),
     mintToOwner: false,
     jettonIconImageData: Buffer.from(""),
+    onProgress: () => {
+      /* do nothing */
+    },
   };
 
   beforeEach(() => {
@@ -40,6 +45,8 @@ describe("Deploy Controller", () => {
     fileUploaderStub.upload.resolves("");
     tonClient = sinon.stubConstructor(TonClient, { endpoint: "" });
     contractDeployer = sinon.stubConstructor(ContractDeployer);
+    contractDeployer.addressForContract.returns(randomAddress("randAddr"));
+    contractDeployer.deployContract.resolves(randomAddress("randAddrs"));
     deployController = new JettonDeployController(tonClient);
   });
 
@@ -47,19 +54,49 @@ describe("Deploy Controller", () => {
     tonClient.isContractDeployed.onFirstCall().resolves(false).onSecondCall().resolves(true).onThirdCall().resolves(true);
     tonClient.getBalance.resolves(toNano(1));
 
+    const stubGetJettonDataResponse = (stub: sinon.StubbedInstance<TonClient>, initialSupply: BN, ownerAddress: Address) => {
+        stub.callGetMethod.withArgs(randomAddress("minterAddr"), "get_jetton_data").resolves({...retVal, stack: [
+            stubNumVal(initialSupply), 
+            stubNumVal(new BN(0)), 
+            addressToB64GetCell(ownerAddress)
+        ]});
+    };
+
+    stubGetJettonDataResponse(tonClient, new BN(0),randomAddress("owner"));
     tonClient.callGetMethod.callsFake(async (address: Address, name: string, params?: any[]) => {
-      if (name === "get_jetton_data") {
-        retVal.stack = [stubNumVal, stubNumVal, cellToB64GetCall(beginCell().storeAddress(randomAddress("owner")).endCell())];
-      } else if (name === "get_wallet_address") {
+      if (name === "get_wallet_address") {
         retVal.stack = [cellToB64GetCall(beginCell().storeAddress(randomAddress("jwalletaddr")).endCell())];
       } else if (name === "get_wallet_data") {
-        retVal.stack = [stubNumVal];
+        retVal.stack = [stubNumVal(new BN(0))];
       }
 
       return retVal;
     });
 
+    await deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub);
     await expect(deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.fulfilled;
+    expect(fileUploaderStub.upload).to.have.been.calledTwice;
+    expect(contractDeployer.deployContract).to.have.been.calledOnce;
+  });
+
+  it("Fails if amount was not minted to owner as provided", async () => {
+    tonClient.isContractDeployed.onFirstCall().resolves(false).onSecondCall().resolves(true).onThirdCall().resolves(true);
+    tonClient.getBalance.resolves(toNano(1));
+
+    tonClient.callGetMethod.callsFake(async (address: Address, name: string, params?: any[]) => {
+      if (name === "get_jetton_data") {
+        retVal.stack = [stubNumVal(new BN(0)), stubNumVal(new BN(0)), cellToB64GetCall(beginCell().storeAddress(randomAddress("owner")).endCell())];
+      } else if (name === "get_wallet_address") {
+        retVal.stack = [cellToB64GetCall(beginCell().storeAddress(randomAddress("jwalletaddr")).endCell())];
+      } else if (name === "get_wallet_data") {
+        retVal.stack = [stubNumVal(new BN(0))];
+      }
+
+      return retVal;
+    });
+
+    // await deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub);
+    await expect(deployController.createJetton({...deployPayload, amountToMint: toNano(1)}, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.rejected;
     expect(fileUploaderStub.upload).to.have.been.calledTwice;
     expect(contractDeployer.deployContract).to.have.been.calledOnce;
   });
@@ -79,11 +116,11 @@ describe("Deploy Controller", () => {
 
     tonClient.callGetMethod.callsFake(async (address: Address, name: string, params?: any[]) => {
       if (name === "get_jetton_data") {
-        retVal.stack = [stubNumVal, stubNumVal, cellToB64GetCall(beginCell().storeAddress(randomAddress("owner")).endCell())];
+        retVal.stack = [stubNumVal(new BN(0)), stubNumVal(new BN(0)), cellToB64GetCall(beginCell().storeAddress(randomAddress("owner")).endCell())];
       } else if (name === "get_wallet_address") {
         retVal.stack = [cellToB64GetCall(beginCell().storeAddress(randomAddress("jwalletaddr")).endCell())];
       } else if (name === "get_wallet_data") {
-        retVal.stack = [stubNumVal];
+        retVal.stack = [stubNumVal(new BN(0))];
       }
 
       return retVal;
@@ -100,15 +137,15 @@ describe("Deploy Controller", () => {
     tonClient.callGetMethod.callsFake(async (address: Address, name: string, params?: any[]) => {
       if (name === "get_jetton_data") {
         retVal.stack = [
-          stubNumVal,
-          stubNumVal,
+          stubNumVal(new BN(0)),
+          stubNumVal(new BN(0)),
           cellToB64GetCall(beginCell().storeAddress(randomAddress("jwalletaddr")).endCell()),
           cellToB64GetCall(beginCell().storeInt(1, 8).storeBuffer(Buffer.from(STUB_URI, "ascii")).endCell()),
         ];
       } else if (name === "get_wallet_address") {
         retVal.stack = [cellToB64GetCall(beginCell().storeAddress(randomAddress("jwalletaddr")).endCell())];
       } else if (name === "get_wallet_data") {
-        retVal.stack = [stubNumVal];
+        retVal.stack = [stubNumVal(new BN(0))];
       }
 
       return retVal;
@@ -118,3 +155,4 @@ describe("Deploy Controller", () => {
     await expect(deployController.getJettonDetails(randomAddress("minteraddr"), randomAddress("jwalletowneraddr"))).to.be.fulfilled;
   });
 });
+
