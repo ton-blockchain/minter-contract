@@ -16,7 +16,9 @@ chai.use(sinonChai);
 
 const stubNumVal = (num: BN) => ["num", num.toString()];
 const cellToB64GetCall = (cell: Cell) => ["cell", { bytes: cell.toBoc().toString("base64") }];
-const addressToCell = (address: Address) => beginCell().storeAddress(address).endCell();
+
+// TODO move
+export const addressToCell = (address: Address) => beginCell().storeAddress(address).endCell();
 
 function getMethodRetValToStack(args) {
   return args.map((a) => {
