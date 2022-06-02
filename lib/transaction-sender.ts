@@ -37,9 +37,9 @@ export class ChromeExtensionTransactionSender implements TransactionSender {
 
 // TODO handle message
 export class PrivKeyTransactionSender implements TransactionSender {
-  #mnemonic: string;
+  #mnemonic: string[];
 
-  constructor(mnemonic: string) {
+  constructor(mnemonic: string[]) {
     this.#mnemonic = mnemonic;
   }
 

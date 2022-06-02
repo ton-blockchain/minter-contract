@@ -93,7 +93,6 @@ describe("Deploy Controller", () => {
       get_wallet_data: [new BN(0)],
     });
 
-    // await deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub);
     await expect(deployController.createJetton({ ...deployPayload, amountToMint: toNano(1) }, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.rejected;
     expect(fileUploaderStub.upload).to.have.been.calledTwice;
     expect(contractDeployer.deployContract).to.have.been.calledOnce;
