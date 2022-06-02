@@ -1,14 +1,13 @@
 import BN from "bn.js";
 import { Cell, beginCell, Address, toNano } from "ton";
-import * as fs from "fs";
 
 const OFFCHAIN_CONTENT_PREFIX = 0x01;
 
-import {hex as walletHex} from "../build/jetton-wallet-hex.json";
-import {hex as minterHex} from "../build/jetton-minter-hex.json";
+import walletHex from "../build/jetton-wallet-hex.json";
+import minterHex from "../build/jetton-minter-hex.json";
 
-export const JETTON_WALLET_CODE = Cell.fromBoc(walletHex)[0];
-export const JETTON_MINTER_CODE = Cell.fromBoc(minterHex)[0]; // code cell from build output
+export const JETTON_WALLET_CODE = Cell.fromBoc(walletHex.hex)[0];
+export const JETTON_MINTER_CODE = Cell.fromBoc(minterHex.hex)[0]; // code cell from build output
 
 enum OPS {
   Mint = 21,
