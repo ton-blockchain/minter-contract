@@ -81,6 +81,7 @@ describe("Deploy Controller", () => {
     });
 
     // await deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub);
+    await deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub);
     await expect(deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.fulfilled;
     expect(fileUploaderStub.upload).to.have.been.calledTwice;
     expect(contractDeployer.deployContract).to.have.been.calledOnce;

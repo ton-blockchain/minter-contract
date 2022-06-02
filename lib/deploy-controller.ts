@@ -82,16 +82,13 @@ export class JettonDeployController {
 
     const { address: deployedOwnerAddress } = await jettonMinterContract.getJettonDetails();
     if (deployedOwnerAddress.toFriendly() !== params.owner.toFriendly()) throw new Error("Contract deployed incorrectly");
-
+    
     const ownerJWalletAddr = await jettonMinterContract.getJWalletAddress(params.owner);
-
-    const jwalletContract = new JettonWalletContract(new TonClientExecutor(this.#client, ownerJWalletAddr));
-
-    params.onProgress?.(JettonDeployState.AWAITING_MINTER_DEPLOY);
     await waitForContractDeploy(ownerJWalletAddr, this.#client);
-
+    
     params.onProgress?.(JettonDeployState.VERIFY_MINT, undefined, contractAddr.toFriendly()); // TODO better way of emitting the contract?
-
+    
+    const jwalletContract = new JettonWalletContract(new TonClientExecutor(this.#client, ownerJWalletAddr));
     const { balance: jettonBalance } = await jwalletContract.getWalletData();
 
     if (!jettonBalance.eq(params.amountToMint)) throw new Error("Mint fail");
