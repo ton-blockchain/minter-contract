@@ -10,12 +10,13 @@
     "strict": true,
     "skipLibCheck": true,
     "rootDir": "lib",
-    "outDir": "dist"
+    "outDir": "dist",
+    "resolveJsonModule": true
   },
   "include": ["lib"],
   "exclude": ["node_modules", "dist"],
   "ts-node": {
     "transpileOnly": true,
     "transpiler": "ts-node/transpilers/swc"
-  }
+  },
 }

@@ -1,6 +1,5 @@
 import BN from "bn.js";
 import { Address, Cell, Slice } from "ton";
-// import { SmartContract } from "ton-contract-executor";
 
 interface JettonDetails {
   totalSupply: BN;
@@ -22,7 +21,7 @@ function parseContentField(content: Slice): string {
 export function parseJettonDetails(execResult: { result: any[] }): JettonDetails {
   return {
     totalSupply: execResult.result[0] as BN,
-    address: (execResult.result[2] as Slice).readAddress()!,
+    address: (execResult.result[2] as Slice).readAddress() as Address,
     contentUri: parseContentField((execResult.result[3] as Cell).beginParse()),
   };
 }
