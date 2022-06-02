@@ -36,6 +36,7 @@ export class ChromeExtensionTransactionSender implements TransactionSender {
 }
 
 // TODO handle message
+// TODO this resembles the ton-starter deployer. we can perhaps utilize this
 export class PrivKeyTransactionSender implements TransactionSender {
   #mnemonic: string[];
 
@@ -60,11 +61,6 @@ export class PrivKeyTransactionSender implements TransactionSender {
     );
 
     const seqno = await walletContract.getSeqNo();
-
-    /* 
-            FOR FUN
-        */
-
     const INIT_CELL = new Cell();
     transactionDetails.stateInit.writeTo(INIT_CELL);
 
@@ -83,8 +79,6 @@ export class PrivKeyTransactionSender implements TransactionSender {
     c0.readCoins();
     console.log(c0.readAddress()?.toFriendly());
 
-    // const stateInitCell = .refs[1].beginParse()
-
     const transfer = walletContract.createTransfer({
       secretKey: wk.secretKey,
       seqno: seqno,
@@ -94,7 +88,6 @@ export class PrivKeyTransactionSender implements TransactionSender {
         value: transactionDetails.value,
         bounce: false,
         body: new CommonMessageInfo({
-          // stateInit: transactionDetails.stateInit,
           stateInit: new CellMessage(Cell.fromBoc(Buffer.from(b64InitCell, "base64"))[0]),
           body: null,
         }),
