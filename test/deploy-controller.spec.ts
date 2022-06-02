@@ -24,7 +24,7 @@ describe("Deploy Controller", () => {
   const retVal = { gas_used: 0, stack: [] };
   const stubNumVal = (num: BN) => ["num", num.toString()];
   const cellToB64GetCall = (cell: Cell) => ["cell", { bytes: cell.toBoc().toString("base64") }];
-  const addressToB64GetCell = (address: Address) => cellToB64GetCall(beginCell().storeAddress(address).endCell());
+  const addressToCell = (address: Address) => beginCell().storeAddress(address).endCell();
 
   const deployPayload = {
     amountToMint: toNano(0),
@@ -52,17 +52,10 @@ describe("Deploy Controller", () => {
   it("Deploys a jetton wallet", async () => {
     tonClient.isContractDeployed.onFirstCall().resolves(false).onSecondCall().resolves(true).onThirdCall().resolves(true);
     tonClient.getBalance.resolves(toNano(1));
-
-    tonClient.callGetMethod.callsFake(async (address: Address, name: string, params?: any[]) => {
-      if (name === "get_jetton_data") {
-        retVal.stack = [stubNumVal(new BN(0)), stubNumVal(new BN(0)), addressToB64GetCell(randomAddress("owner"))];
-      } else if (name === "get_wallet_address") {
-        retVal.stack = [addressToB64GetCell(randomAddress("jwalletAddr"))];
-      } else if (name === "get_wallet_data") {
-        retVal.stack = [stubNumVal(new BN(0))];
-      }
-
-      return retVal;
+    stubTonClientGet(tonClient, {
+      get_jetton_data: [new BN(0), new BN(0), addressToCell(randomAddress("owner"))],
+      get_wallet_address: [addressToCell(randomAddress("jwalletaddr"))],
+      get_wallet_data: [new BN(0)],
     });
 
     // await deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub);
@@ -74,17 +67,10 @@ describe("Deploy Controller", () => {
   it("Fails if amount was not minted to owner as provided", async () => {
     tonClient.isContractDeployed.onFirstCall().resolves(false).onSecondCall().resolves(true).onThirdCall().resolves(true);
     tonClient.getBalance.resolves(toNano(1));
-
-    tonClient.callGetMethod.callsFake(async (address: Address, name: string, params?: any[]) => {
-      if (name === "get_jetton_data") {
-        retVal.stack = [stubNumVal(new BN(0)), stubNumVal(new BN(0)), cellToB64GetCall(beginCell().storeAddress(randomAddress("owner")).endCell())];
-      } else if (name === "get_wallet_address") {
-        retVal.stack = [cellToB64GetCall(beginCell().storeAddress(randomAddress("jwalletaddr")).endCell())];
-      } else if (name === "get_wallet_data") {
-        retVal.stack = [stubNumVal(new BN(0))];
-      }
-
-      return retVal;
+    stubTonClientGet(tonClient, {
+      get_jetton_data: [new BN(0), new BN(0), addressToCell(randomAddress("owner"))],
+      get_wallet_address: [addressToCell(randomAddress("jwalletaddr"))],
+      get_wallet_data: [new BN(0)],
     });
 
     // await deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub);
@@ -105,17 +91,10 @@ describe("Deploy Controller", () => {
   it("Skips deployment if contract is already deployed", async () => {
     tonClient.isContractDeployed.resolves(true);
     tonClient.getBalance.resolves(toNano(1));
-
-    tonClient.callGetMethod.callsFake(async (address: Address, name: string, params?: any[]) => {
-      if (name === "get_jetton_data") {
-        retVal.stack = [stubNumVal(new BN(0)), stubNumVal(new BN(0)), cellToB64GetCall(beginCell().storeAddress(randomAddress("owner")).endCell())];
-      } else if (name === "get_wallet_address") {
-        retVal.stack = [cellToB64GetCall(beginCell().storeAddress(randomAddress("jwalletaddr")).endCell())];
-      } else if (name === "get_wallet_data") {
-        retVal.stack = [stubNumVal(new BN(0))];
-      }
-
-      return retVal;
+    stubTonClientGet(tonClient, {
+      get_jetton_data: [new BN(0), new BN(0), addressToCell(randomAddress("owner"))],
+      get_wallet_address: [addressToCell(randomAddress("jwalletaddr"))],
+      get_wallet_data: [new BN(0)],
     });
 
     await expect(deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.fulfilled;
@@ -123,24 +102,30 @@ describe("Deploy Controller", () => {
     expect(contractDeployer.deployContract).to.not.have.been.called;
   });
 
+  function stubTonClientGet(tonClient, spec) {
+    tonClient.callGetMethod.callsFake(async (address: Address, name: string, params?: any[]) => {
+      retVal.stack = getMethodRetValToStack(spec[name]);
+      return retVal;
+    });
+  }
+
+  function getMethodRetValToStack(args) {
+    return args.map((a) => {
+      if (a instanceof BN) {
+        return stubNumVal(a);
+      } else if (a instanceof Cell) {
+        return cellToB64GetCall(a);
+      }
+    });
+  }
+
   it("Retrieves jwallet details", async () => {
     const STUB_URI = "STUB";
 
-    tonClient.callGetMethod.callsFake(async (address: Address, name: string, params?: any[]) => {
-      if (name === "get_jetton_data") {
-        retVal.stack = [
-          stubNumVal(new BN(0)),
-          stubNumVal(new BN(0)),
-          cellToB64GetCall(beginCell().storeAddress(randomAddress("jwalletaddr")).endCell()),
-          cellToB64GetCall(beginCell().storeInt(1, 8).storeBuffer(Buffer.from(STUB_URI, "ascii")).endCell()),
-        ];
-      } else if (name === "get_wallet_address") {
-        retVal.stack = [cellToB64GetCall(beginCell().storeAddress(randomAddress("jwalletaddr")).endCell())];
-      } else if (name === "get_wallet_data") {
-        retVal.stack = [stubNumVal(new BN(0))];
-      }
-
-      return retVal;
+    stubTonClientGet(tonClient, {
+      get_jetton_data: [new BN(0), new BN(0), addressToCell(randomAddress("owner")), beginCell().storeInt(1, 8).storeBuffer(Buffer.from(STUB_URI, "ascii")).endCell()],
+      get_wallet_address: [addressToCell(randomAddress("jwalletaddr"))],
+      get_wallet_data: [new BN(0)],
     });
 
     sinon.default.stub(axios, "get").withArgs(STUB_URI).resolves("STUB DATA");
