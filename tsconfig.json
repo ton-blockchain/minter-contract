@@ -10,7 +10,7 @@
     "strict": true,
     "skipLibCheck": true,
     "rootDir": "lib",
-    "outDir": "dist",
+    "outDir": "dist"
   },
   "include": ["lib"],
   "exclude": ["node_modules", "dist"],

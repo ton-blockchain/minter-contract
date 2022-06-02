@@ -1,12 +1,12 @@
-require('dotenv').config();
+require("dotenv").config();
 import { TonClient, Wallet, Address, beginCell, Cell, Slice } from "ton";
-import fs from 'fs';
+import fs from "fs";
 import { KeyPair } from "ton-crypto";
 import BN from "bn.js";
 
 const WORKCHAIN = 0;
 const TON_0_1 = new BN("100000000");
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 import axios from "axios";
 import axiosThrottle from "axios-request-throttle";
@@ -15,25 +15,27 @@ axiosThrottle.use(axios, { requestsPerSecond: 0.5 }); // required since toncente
 process.env.TESTNET = 1;
 
 interface WalletJSON {
-  address: Address,
-  key: KeyPair,
-  mnemonic: string[]
+  address: Address;
+  key: KeyPair;
+  mnemonic: string[];
 }
 
 class WalletSerde {
-
-  private static _walletToFileName = (w: string) => `wallets/${process.env.TESTNET ? 'testnet' : 'mainnet'}/${w}.json`;
+  private static _walletToFileName = (w: string) => `wallets/${process.env.TESTNET ? "testnet" : "mainnet"}/${w}.json`;
 
   static async createWalletAndSerialize(client: TonClient, walletName: string) {
     const { wallet, mnemonic, key } = await client.createNewWallet({
       workchain: WORKCHAIN,
     });
 
-    fs.writeFileSync(this._walletToFileName(walletName), JSON.stringify({
-      address: wallet.address.toFriendly(),
-      key,
-      mnemonic
-    }));
+    fs.writeFileSync(
+      this._walletToFileName(walletName),
+      JSON.stringify({
+        address: wallet.address.toFriendly(),
+        key,
+        mnemonic,
+      })
+    );
   }
 
   static deserializeWallet(walletName: string): WalletJSON {
@@ -48,10 +50,9 @@ class WalletSerde {
 (async () => {
   // Create Client
   const client = new TonClient({
-    endpoint: `https://${process.env.TESTNET ? 'testnet.' : ''}toncenter.com/api/v2/jsonRPC`, 
-    apiKey: process.env.TESTNET ? process.env.TESTNET_API_KEY : process.env.MAINNET_API_KEY
+    endpoint: `https://${process.env.TESTNET ? "testnet." : ""}toncenter.com/api/v2/jsonRPC`,
+    apiKey: process.env.TESTNET ? process.env.TESTNET_API_KEY : process.env.MAINNET_API_KEY,
   });
-
 
   async function createWallets() {
     await WalletSerde.createWalletAndSerialize(client, "wallet1");
@@ -61,28 +62,23 @@ class WalletSerde {
 
   async function readWallets() {
     const walletNames = ["wallet1", "wallet2", "wallet3"];
-    const balances = await Promise.all(
-      walletNames
-        .map(w => (WalletSerde.deserializeWallet(w).address))
-        .map(async a => await client.getBalance(a))
-    )
+    const balances = await Promise.all(walletNames.map((w) => WalletSerde.deserializeWallet(w).address).map(async (a) => await client.getBalance(a)));
 
     walletNames.forEach((w, i) => {
-      console.log(`${w}:${balances[i]}`)
+      console.log(`${w}:${balances[i]}`);
     });
-
   }
 
   async function transfer(from: WalletJSON, to: Address, value: BN, client: TonClient) {
     const fromWallet = client.openWalletFromAddress({ source: from.address });
     fromWallet.prepare(0, from.key.publicKey);
-    const beforeseqno = (await fromWallet.getSeqNo());
+    const beforeseqno = await fromWallet.getSeqNo();
     await fromWallet.transfer({
       seqno: beforeseqno,
       to,
       value,
       bounce: false,
-      secretKey: from.key.secretKey
+      secretKey: from.key.secretKey,
     });
 
     let seqno = -1;
@@ -92,7 +88,7 @@ class WalletSerde {
       if (sleepMS > 15000) throw new Error("Unexpected block time finalization");
       console.log(`Awaiting seqno to update. sleeping for ${sleepMS}ms`);
       await sleep(sleepMS);
-      seqno = await fromWallet.getSeqNo()
+      seqno = await fromWallet.getSeqNo();
       sleepMS *= 2;
     }
   }
@@ -110,16 +106,12 @@ class WalletSerde {
     //   .storeAddress(wallet1.address)
     //   .endCell()
 
-    const cellBoc = (cell.toBoc({ idx: false })).toString('base64');
+    const cellBoc = cell.toBoc({ idx: false }).toString("base64");
 
     // @ts-ignore
     const MINTER_CONTRACT_ADDRESS = Address.parse(process.env.TESTNET ? process.env.TESTNET_MINTER_CONTRACT : process.env.MAINNET_MINTER_CONTRACT);
 
-    const res = await client.callGetMethod(
-      MINTER_CONTRACT_ADDRESS,
-      "get_wallet_address",
-      [['tvm.Slice', cellBoc]]
-    )
+    const res = await client.callGetMethod(MINTER_CONTRACT_ADDRESS, "get_wallet_address", [["tvm.Slice", cellBoc]]);
 
     function bytesToAddress(bufferB64: string): Address {
       const buff = Buffer.from(bufferB64, "base64");
@@ -133,36 +125,28 @@ class WalletSerde {
     // )
 
     // JSON - https://api.jsonbin.io/b/628ced3405f31f68b3a53622
-    console.log(
-      bytesToAddress(res.stack[0][1].bytes).toFriendly()
-    ); // TODO figure out bytes to address
-
-
+    console.log(bytesToAddress(res.stack[0][1].bytes).toFriendly()); // TODO figure out bytes to address
   }
 
   const command = process.argv[2];
 
-  switch ((command ?? '').toLowerCase()) {
-    case 'create':
+  switch ((command ?? "").toLowerCase()) {
+    case "create":
       break;
-    case 'balances':
+    case "balances":
       await readWallets();
       break;
-    case 'transfer':
+    case "transfer":
       break;
-    case 'jettonread':
+    case "jettonread":
       await jettonRead();
       break;
     default:
       throw new Error("Unknown command");
   }
 
-  return
-
-
-
+  return;
 })();
-
 
 // static async GetWalletAddress(client: TonClient, minterAddress: Address, walletAddress: Address) {
 //         try {

@@ -1,11 +1,7 @@
 namespace CLI {
-    interface JettonDeployParams {
-        jettonName: string
-    }
+  interface JettonDeployParams {
+    jettonName: string;
+  }
 
-    export async function deployJetton(params: JettonDeployParams) {
-
-        
-
-    }
+  export async function deployJetton(params: JettonDeployParams) {}
 }
