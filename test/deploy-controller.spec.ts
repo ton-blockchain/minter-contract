@@ -14,6 +14,22 @@ import axios from "axios";
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
 
+const stubNumVal = (num: BN) => ["num", num.toString()];
+const cellToB64GetCall = (cell: Cell) => ["cell", { bytes: cell.toBoc().toString("base64") }];
+const addressToCell = (address: Address) => beginCell().storeAddress(address).endCell();
+
+function getMethodRetValToStack(args) {
+  return args.map((a) => {
+    if (a instanceof BN) {
+      return stubNumVal(a);
+    } else if (a instanceof Cell) {
+      return cellToB64GetCall(a);
+    } else {
+        throw "Unknown type";
+    }
+  });
+}
+
 describe("Deploy Controller", () => {
   let transactionSenderStub: sinon.StubbedInstance<TransactionSender>;
   let fileUploaderStub: sinon.StubbedInstance<FileUploader>;
@@ -22,9 +38,13 @@ describe("Deploy Controller", () => {
   let deployController: JettonDeployController;
 
   const retVal = { gas_used: 0, stack: [] };
-  const stubNumVal = (num: BN) => ["num", num.toString()];
-  const cellToB64GetCall = (cell: Cell) => ["cell", { bytes: cell.toBoc().toString("base64") }];
-  const addressToCell = (address: Address) => beginCell().storeAddress(address).endCell();
+
+  function stubTonClientGet(tonClient, spec) {
+    tonClient.callGetMethod.callsFake(async (address: Address, name: string, params?: any[]) => {
+      retVal.stack = getMethodRetValToStack(spec[name]);
+      return retVal;
+    });
+  }
 
   const deployPayload = {
     amountToMint: toNano(0),
@@ -101,23 +121,6 @@ describe("Deploy Controller", () => {
     expect(fileUploaderStub.upload).to.have.been.calledTwice;
     expect(contractDeployer.deployContract).to.not.have.been.called;
   });
-
-  function stubTonClientGet(tonClient, spec) {
-    tonClient.callGetMethod.callsFake(async (address: Address, name: string, params?: any[]) => {
-      retVal.stack = getMethodRetValToStack(spec[name]);
-      return retVal;
-    });
-  }
-
-  function getMethodRetValToStack(args) {
-    return args.map((a) => {
-      if (a instanceof BN) {
-        return stubNumVal(a);
-      } else if (a instanceof Cell) {
-        return cellToB64GetCall(a);
-      }
-    });
-  }
 
   it("Retrieves jwallet details", async () => {
     const STUB_URI = "STUB";
