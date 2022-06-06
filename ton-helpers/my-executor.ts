@@ -109,10 +109,10 @@ class ZContract {
   }
 }
 
-export interface ContractGetMethod {
-  name: string;
-  resolver: (res: (BN | Cell)[]) => unknown;
-}
+// export interface ContractGetMethod {
+//   name: string;
+//   resolver: (res: (BN | Cell)[]) => unknown;
+// }
 
 export const JettonMinterMethods = {
   getJettonDetails: {
@@ -124,7 +124,7 @@ export const JettonMinterMethods = {
         totalSupply: res[0] as BN,
         address: (res[2] as Cell).beginParse().readAddress() as Address,
         contentUri: contentUriSlice.readRemainingBytes().toString("ascii"),
-      } as JettonDetails;
+      };
     },
   },
 };

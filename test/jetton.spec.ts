@@ -36,7 +36,7 @@ describe("Jetton", () => {
         jettonWalletCode: JETTON_WALLET_CODE,
       })
     );
-    return new JettonWalletContract(new TestSuiteExecutor(c.contract));
+    return new JettonWalletContract(new TestSuiteExecutor(c.contract), c.address);
   };
 
   beforeEach(async () => {

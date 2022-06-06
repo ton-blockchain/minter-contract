@@ -83,11 +83,15 @@ export class JettonDeployController {
       await waitForContractDeploy(contractAddr, this.#client);
     }
 
-    const hi = await minterGetExecutor("get_jetton_details", [], JettonMinterContract.getJettonDetails);
-
     async function pipeFor<T>({ name, resolver }: { name: string; resolver: (res: (BN | Cell)[]) => T }) {
       return R.pipe(() => minterGetExecutor(name, []), R.andThen(resolver))();
     }
+
+    const x2 = await R.pipe(
+        minterGetExecutor(JettonMinterMethods.getJettonDetails.name, []),
+        R.andThen(JettonMinterMethods.getJettonDetails.resolver)
+    )();
+  
 
     const x1 = await pipeFor(JettonMinterMethods.getJettonDetails);
 

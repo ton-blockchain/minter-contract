@@ -32,6 +32,7 @@ export async function waitForContractDeploy(address: Address, client: TonClient)
   throw new Error("Timeout");
 }
 
+// TODO remove
 export function parseGetMethodCall(stack: any[]) {
   return stack.map(([type, val]) => {
     switch (type) {
