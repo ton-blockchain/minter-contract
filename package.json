@@ -8,7 +8,7 @@
     "prettier": "npx prettier --write '{test,contracts,build}/**/*.{ts,js,json}'",
     "test": "mocha  --exit test/**/*.spec.ts",
     "test:coverage": "nyc mocha --exit test/**/*.spec.ts",
-    "test:watch": "mocha --watch --watch-files test/**/*.ts,lib/**/*.ts test/**/*.spec.ts",
+    "test:watch": "mocha --watch --watch-files test/**/*.ts,lib/**/*.ts,ton-helpers/**/*.ts test/**/*.spec.ts",
     "build": "ts-node ./build/_build.ts",
     "deploy": "ts-node ./build/_deploy.ts",
     "deploy:testnet": "ts-node ./build/_deploy.ts",
@@ -20,6 +20,7 @@
     "@types/chai": "^4.3.0",
     "@types/chai-as-promised": "^7.1.5",
     "@types/mocha": "^9.1.1",
+    "@types/ramda": "^0.28.14",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
     "@typescript-eslint/parser": "^5.27.0",
     "axios-request-throttle": "^1.0.0",
@@ -56,6 +57,7 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
-    "commander": "^9.3.0"
+    "commander": "^9.3.0",
+    "ramda": "^0.28.0"
   }
 }

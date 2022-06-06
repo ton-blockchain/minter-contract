@@ -15,7 +15,8 @@ import { JettonMinter } from "./lib/jetton-minter";
 import { actionToMessage } from "./lib/utils";
 import { JettonWallet } from "./lib/jetton-wallet";
 import { JETTON_MINTER_CODE, JETTON_WALLET_CODE } from "../contracts/jetton-minter";
-import { JettonMinterContract, TestSuiteExecutor } from "../ton-helpers/my-executor";
+import { JettonMinterContract, JettonWalletContract, TestSuiteExecutor } from "../ton-helpers/my-executor";
+import { TransactionDetails, TransactionSender } from "../lib/transaction-sender";
 
 const OWNER_ADDRESS = randomAddress("owner");
 const PARTICIPANT_ADDRESS_1 = randomAddress("participant_1");
@@ -24,9 +25,10 @@ const PARTICIPANT_ADDRESS_2 = randomAddress("participant_2");
 
 describe("Jetton", () => {
   let minterContract: JettonMinter;
+  let theRealMinterContract: JettonMinterContract;
 
-  const getJWalletContract = async (walletOwnerAddress: Address, jettonMasterAddress: Address): Promise<JettonWallet> =>
-    await JettonWallet.create(
+  const getJWalletContract = async (walletOwnerAddress: Address, jettonMasterAddress: Address): Promise<JettonWalletContract> => {
+    const c = await JettonWallet.create(
       JETTON_WALLET_CODE,
       jetton_wallet.data({
         walletOwnerAddress,
@@ -34,16 +36,18 @@ describe("Jetton", () => {
         jettonWalletCode: JETTON_WALLET_CODE,
       })
     );
+    return new JettonWalletContract(new TestSuiteExecutor(c.contract));
+  };
 
   beforeEach(async () => {
-    const dataCell = jetton_minter.initData(OWNER_ADDRESS,"https://api.jsonbin.io/b/628ced3405f31f68b3a53622");
+    const dataCell = jetton_minter.initData(OWNER_ADDRESS, "https://api.jsonbin.io/b/628ced3405f31f68b3a53622");
     minterContract = (await JettonMinter.create(JETTON_MINTER_CODE, dataCell)) as JettonMinter; // TODO: 🤮;
+    theRealMinterContract = new JettonMinterContract(new TestSuiteExecutor(minterContract.contract)); // TODO continue with this
   });
 
   it("should get minter initialization data correctly", async () => {
-    const myCtrct = new JettonMinterContract(new TestSuiteExecutor(minterContract.contract)); // TODO continue with this
-    const { totalSupply, address, contentUri } = await myCtrct.getJettonDetails();
-    
+    const { totalSupply, address, contentUri } = await theRealMinterContract.getJettonDetails();
+
     // const call = await minterContract.contract.invokeGetMethod("get_jetton_data", []);
     // const { totalSupply, address, contentUri } = parseJettonDetails(call);
 
@@ -54,17 +58,18 @@ describe("Jetton", () => {
 
   it("offchain and onchain jwallet should return the same address", async () => {
     const jwallet = await getJWalletContract(PARTICIPANT_ADDRESS_1, minterContract.address);
-    const participantJwalletAddress = await minterContract.getWalletAddress(PARTICIPANT_ADDRESS_1);
+    const participantJwalletAddress = await theRealMinterContract.getJWalletAddress(PARTICIPANT_ADDRESS_1);
     expect(jwallet.address.toFriendly()).to.equal(participantJwalletAddress.toFriendly());
   });
 
   it("should get jwallet initialization data correctly", async () => {
     const jwallet = await getJWalletContract(PARTICIPANT_ADDRESS_1, minterContract.address);
-    const jwalletDetails = parseJettonWalletDetails(await jwallet.contract.invokeGetMethod("get_wallet_data", []));
+    const jwalletC = new JettonWalletContract(new TestSuiteExecutor(jwallet.contract));
+    const { balance, owner, masterContract } = await jwalletC.getWalletData();
 
-    expect(jwalletDetails.balance).to.bignumber.equal(new BN(0));
-    expect(jwalletDetails.owner.toFriendly()).to.equal(PARTICIPANT_ADDRESS_1.toFriendly());
-    expect(jwalletDetails.jettonMasterContract.toFriendly()).to.equal(minterContract.address.toFriendly());
+    expect(balance).to.bignumber.equal(new BN(0));
+    expect(owner.toFriendly()).to.equal(PARTICIPANT_ADDRESS_1.toFriendly());
+    expect(masterContract.toFriendly()).to.equal(minterContract.address.toFriendly());
   });
 
   it("should mint jettons and transfer to 2 new wallets", async () => {
@@ -108,7 +113,7 @@ describe("Jetton", () => {
     expect(totalSupply).to.bignumber.equal(toNano(0.03), "total supply should amount to both mints");
   });
 
-  it("should mint jettons and transfer from wallet1 to wallet2", async () => {
+  it.only("should mint jettons and transfer from wallet1 to wallet2", async () => {
     // Produce mint message
     const { actionList: actionList1 } = await minterContract.contract.sendInternalMessage(
       internalMessage({

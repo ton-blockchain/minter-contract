@@ -2,14 +2,15 @@ import BN from "bn.js";
 import { Address, beginCell, Cell, toNano, TonClient } from "ton";
 import { TransactionSender } from "./transaction-sender";
 import { ContractDeployer } from "./contract-deployer";
+import R from "ramda";
 
 // TODO temporary
 import axios from "axios";
 import axiosThrottle from "axios-request-throttle";
 import { FileUploader } from "./file-uploader";
 import { parseGetMethodCall, waitForContractDeploy } from "./utils";
-import { initData, mintBody, JETTON_MINTER_CODE } from "../contracts/jetton-minter";
-import { JettonMinterContract, JettonWalletContract, TonClientExecutor } from "../ton-helpers/my-executor";
+import { initData, mintBody, JETTON_MINTER_CODE, getWalletAddress } from "../contracts/jetton-minter";
+import { JettonDetails, JettonMinterContract, JettonWalletContract, TonClientGetMethodExecutor, JettonMinterMethods, ContractGetMethod } from "../ton-helpers/my-executor";
 axiosThrottle.use(axios, { requestsPerSecond: 0.9 }); // required since toncenter jsonRPC limits to 1 req/sec without API key
 
 export const JETTON_DEPLOY_GAS = toNano(0.25);
@@ -68,8 +69,10 @@ export class JettonDeployController {
     };
 
     const contractAddr = contractDeployer.addressForContract(deployParams);
+    // const jettonMinterContract = new JettonMinterContract(new TonClientGetMethodExecutor(this.#client, contractAddr));
 
-    const jettonMinterContract = new JettonMinterContract(new TonClientExecutor(this.#client, contractAddr));
+    const executor = new TonClientGetMethodExecutor();
+    const minterGetExecutor = R.curry(executor.invokeGetMethod)(contractAddr, this.#client);
 
     // TODO: consider moving to Contract class?
     if (await this.#client.isContractDeployed(contractAddr)) {
@@ -80,15 +83,27 @@ export class JettonDeployController {
       await waitForContractDeploy(contractAddr, this.#client);
     }
 
-    const { address: deployedOwnerAddress } = await jettonMinterContract.getJettonDetails();
+    const hi = await minterGetExecutor("get_jetton_details", [], JettonMinterContract.getJettonDetails);
+
+    async function pipeFor<T>({ name, resolver }: { name: string; resolver: (res: (BN | Cell)[]) => T }) {
+      return R.pipe(() => minterGetExecutor(name, []), R.andThen(resolver))();
+    }
+
+    const x1 = await pipeFor(JettonMinterMethods.getJettonDetails);
+
+    const x = await R.pipe(() => minterGetExecutor("get_jetton_details", []), R.andThen(JettonMinterContract.getJettonDetails));
+
+    const { address: deployedOwnerAddress } = await minterGetExecutor("get_jetton_details", []);
     if (deployedOwnerAddress.toFriendly() !== params.owner.toFriendly()) throw new Error("Contract deployed incorrectly");
-    
-    const ownerJWalletAddr = await jettonMinterContract.getJWalletAddress(params.owner);
+
+    const ownerJWalletAddr = (await minterGetExecutor("get_wallet_address", [], JettonMinterContract.getJWalletAddress)) as Address;
     await waitForContractDeploy(ownerJWalletAddr, this.#client);
-    
+
+    const jwalletGetExecutor = R.curry(executor.invokeGetMethod)(ownerJWalletAddr, this.#client);
+
     params.onProgress?.(JettonDeployState.VERIFY_MINT, undefined, contractAddr.toFriendly()); // TODO better way of emitting the contract?
-    
-    const jwalletContract = new JettonWalletContract(new TonClientExecutor(this.#client, ownerJWalletAddr));
+
+    const jwalletContract = new JettonWalletContract(new TonClientGetMethodExecutor(this.#client, ownerJWalletAddr));
     const { balance: jettonBalance } = await jwalletContract.getWalletData();
 
     if (!jettonBalance.eq(params.amountToMint)) throw new Error("Mint fail");
@@ -96,11 +111,11 @@ export class JettonDeployController {
   }
 
   async getJettonDetails(contractAddr: Address, owner: Address) {
-    const jettonMinterContract = new JettonMinterContract(new TonClientExecutor(this.#client, contractAddr));
+    const jettonMinterContract = new JettonMinterContract(new TonClientGetMethodExecutor(this.#client, contractAddr));
     const { contentUri } = await jettonMinterContract.getJettonDetails();
     const jsonData = (await axios.get(contentUri)).data; // TODO support onchain
     const ownerJWalletAddr = await jettonMinterContract.getJWalletAddress(owner);
-    const jwalletContract = new JettonWalletContract(new TonClientExecutor(this.#client, ownerJWalletAddr));
+    const jwalletContract = new JettonWalletContract(new TonClientGetMethodExecutor(this.#client, ownerJWalletAddr));
     const { balance } = await jwalletContract.getWalletData();
 
     return {

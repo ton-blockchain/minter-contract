@@ -3,9 +3,9 @@ import { Address, Cell, Slice, TonClient, contractAddress, beginCell } from "ton
 import { addressToCell } from "../test/deploy-controller.spec";
 import { SmartContract } from "ton-contract-executor";
 
-interface Executor {
-  invokeGetMethod(methodName: string, params?: any[]): Promise<(BN | Cell)[]>;
-}
+// interface Executor {
+//   invokeGetMethod(methodName: string, params?: any[]): Promise<(BN | Cell)[]>;
+// }
 
 // interface CallableGetMethod {
 
@@ -29,15 +29,7 @@ interface Executor {
 
 // }
 
-export class TonClientExecutor implements Executor {
-  #tonClient: TonClient;
-  #contractAddress: Address;
-
-  constructor(tonClient: TonClient, contractAddress: Address) {
-    this.#tonClient = tonClient;
-    this.#contractAddress = contractAddress;
-  }
-
+export class TonClientGetMethodExecutor {
   #parseGetMethodCall(stack: any[]) {
     return stack.map(([type, val]) => {
       switch (type) {
@@ -62,14 +54,14 @@ export class TonClientExecutor implements Executor {
     });
   }
 
-  async invokeGetMethod(methodName: string, params?: any[]): Promise<(BN | Cell)[]> {
-    const res = await this.#tonClient.callGetMethod(this.#contractAddress, methodName, this.#prepareParams(params));
+  async invokeGetMethod(address: Address, tonClient: TonClient, methodName: string, params: any[]): Promise<(BN | Cell)[]> {
+    const res = await tonClient.callGetMethod(address, methodName, this.#prepareParams(params));
     return this.#parseGetMethodCall(res.stack);
   }
 }
 
-
 export class TestSuiteExecutor implements Executor {
+  // TODO add address
   #contract: SmartContract;
   constructor(contract: SmartContract) {
     this.#contract = contract;
@@ -102,8 +94,7 @@ export class TestSuiteExecutor implements Executor {
   }
 }
 
-
-interface JettonDetails {
+export interface JettonDetails {
   totalSupply: BN;
   address: Address;
   contentUri: string;
@@ -111,14 +102,35 @@ interface JettonDetails {
 
 class ZContract {
   protected executor: Executor;
-  constructor(executor: Executor) {
+  public address: Address;
+  constructor(executor: Executor, address: Address) {
     this.executor = executor;
+    this.address = address;
   }
 }
 
+export interface ContractGetMethod {
+  name: string;
+  resolver: (res: (BN | Cell)[]) => unknown;
+}
+
+export const JettonMinterMethods = {
+  getJettonDetails: {
+    name: "get_jetton_details",
+    resolver: (res: (BN | Cell)[]): JettonDetails => {
+      const contentUriSlice = (res[3] as Cell).beginParse(); // TODO support onchain
+      contentUriSlice.readInt(8);
+      return {
+        totalSupply: res[0] as BN,
+        address: (res[2] as Cell).beginParse().readAddress() as Address,
+        contentUri: contentUriSlice.readRemainingBytes().toString("ascii"),
+      } as JettonDetails;
+    },
+  },
+};
+
 export class JettonMinterContract extends ZContract {
-  async getJettonDetails(): Promise<JettonDetails> {
-    const res = await this.executor.invokeGetMethod("get_jetton_data");
+  static getJettonDetails(res: (BN | Cell)[]): JettonDetails {
     const contentUriSlice = (res[3] as Cell).beginParse(); // TODO support onchain
     contentUriSlice.readInt(8);
 
@@ -129,26 +141,27 @@ export class JettonMinterContract extends ZContract {
     };
   }
 
-  async getJWalletAddress(forOwner: Address): Promise<Address> {
-    const res = await this.executor.invokeGetMethod("get_wallet_address", [addressToCell(forOwner)]);
+  static getJWalletAddress(res: (BN | Cell)[]): Address {
     return (res[0] as Cell).beginParse().readAddress() as Address;
   }
 }
 
 interface JWalletData {
-  balance: BN
+  balance: BN;
+  owner: Address;
+  masterContract: Address;
 }
 
 export class JettonWalletContract extends ZContract {
   async getWalletData(): Promise<JWalletData> {
     const res = await this.executor.invokeGetMethod("get_wallet_data");
     return {
-      balance: (res[0] as BN)
+      balance: res[0] as BN,
+      owner: (res[1] as Cell).beginParse().readAddress() as Address,
+      masterContract: (res[2] as Cell).beginParse().readAddress() as Address,
     };
   }
 }
-
-
 
 // new TonClientExecutor().invokeGetMethod("", "", [], new JettonDetailsParser());
 

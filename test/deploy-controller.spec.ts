@@ -79,7 +79,7 @@ describe("Deploy Controller", () => {
     stubTonClientGet(tonClient, {
       get_jetton_data: [new BN(0), new BN(0), addressToCell(randomAddress("owner")), beginCell().storeInt(1, 8).storeBuffer(Buffer.from(STUB_URI, "ascii")).endCell()],
       get_wallet_address: [addressToCell(randomAddress("jwalletaddr"))],
-      get_wallet_data: [new BN(0)],
+      get_wallet_data: [new BN(0),addressToCell(randomAddress("jwallet1")), addressToCell(randomAddress("minterAddr"))],
     });
 
     // await deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub);
@@ -94,7 +94,7 @@ describe("Deploy Controller", () => {
     stubTonClientGet(tonClient, {
       get_jetton_data: [new BN(0), new BN(0), addressToCell(randomAddress("owner")), beginCell().storeInt(1, 8).storeBuffer(Buffer.from(STUB_URI, "ascii")).endCell()],
       get_wallet_address: [addressToCell(randomAddress("jwalletaddr"))],
-      get_wallet_data: [new BN(0)],
+      get_wallet_data: [new BN(0),addressToCell(randomAddress("jwallet1")), addressToCell(randomAddress("minterAddr"))],
     });
 
     await expect(deployController.createJetton({ ...deployPayload, amountToMint: toNano(1) }, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.rejected;
@@ -117,7 +117,7 @@ describe("Deploy Controller", () => {
     stubTonClientGet(tonClient, {
       get_jetton_data: [new BN(0), new BN(0), addressToCell(randomAddress("owner")), beginCell().storeInt(1, 8).storeBuffer(Buffer.from(STUB_URI, "ascii")).endCell()],
       get_wallet_address: [addressToCell(randomAddress("jwalletaddr"))],
-      get_wallet_data: [new BN(0)],
+      get_wallet_data: [new BN(0),addressToCell(randomAddress("jwallet1")), addressToCell(randomAddress("minterAddr"))],
     });
 
     await expect(deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.fulfilled;
@@ -130,7 +130,7 @@ describe("Deploy Controller", () => {
     stubTonClientGet(tonClient, {
       get_jetton_data: [new BN(0), new BN(0), addressToCell(randomAddress("owner")), beginCell().storeInt(1, 8).storeBuffer(Buffer.from(STUB_URI, "ascii")).endCell()],
       get_wallet_address: [addressToCell(randomAddress("jwalletaddr"))],
-      get_wallet_data: [new BN(0)],
+      get_wallet_data: [new BN(0),addressToCell(randomAddress("jwallet1")), addressToCell(randomAddress("minterAddr"))],
     });
 
     const axiosStub = sinon.default.stub(axios, "get");
