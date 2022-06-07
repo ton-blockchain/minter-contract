@@ -24,7 +24,6 @@ const jettonOnChainMetadataSpec: { [key: string]: "utf8" | "ascii" | undefined }
   symbol: "utf8",
 };
 
-// TODO figure out crypto for web?
 const sha256 = (str: string) => {
   const sha = new Sha256();
   sha.update(str);
