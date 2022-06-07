@@ -1,7 +1,6 @@
 import BN from "bn.js";
 import { Cell, beginCell, Address, toNano, beginDict, parseDict, parseDictRefs, BitString } from "ton";
 
-const OFFCHAIN_CONTENT_PREFIX = 0x01;
 const ONCHAIN_CONTENT_PREFIX = 0x00;
 const SNAKE_PREFIX = 0x00;
 
@@ -16,7 +15,7 @@ enum OPS {
   InternalTransfer = 0x178d4519,
   Transfer = 0xf8a7ea5,
 }
-import crypto from "crypto";
+import {Sha256} from "@aws-crypto/sha256-js";
 
 const jettonOnChainMetadataSpec: { [key: string]: "utf8" | "ascii" | undefined } = {
   name: "utf8",
@@ -25,21 +24,24 @@ const jettonOnChainMetadataSpec: { [key: string]: "utf8" | "ascii" | undefined }
   symbol: "utf8",
 };
 
-const _hash = (str: string) => crypto.createHash("sha256").update(str).digest("hex");
-const hash = (str: string) => Buffer.from(_hash(str), "hex");
+// TODO figure out crypto for web?
+const sha256 = (str: string) => {
+  const sha = new Sha256();
+  sha.update(str);
+  return Buffer.from(sha.digestSync());
+};
 
 // TODO: support for vals over 1024 bytes (otherwise it'll fail here)
-function buildOnChainData(data: { [s: string]: string }): Cell {
-  const _hash = (str: string) => crypto.createHash("sha256").update(str).digest("hex");
-  const hash = (str: string) => Buffer.from(_hash(str), "hex");
+function buildOnChainData(data: { [s: string]: string | undefined }): Cell {
   const KEYLEN = 256;
   const dict = beginDict(KEYLEN);
 
-  Object.entries(data).forEach(([k, v]: [string, string]) => {
+  Object.entries(data).forEach(([k, v]: [string, string | undefined]) => {
     if (!jettonOnChainMetadataSpec[k]) throw new Error(`Unsupported onchain key: ${k}`);
+    if (v === undefined) return;
 
     dict.storeCell(
-      hash(k),
+      sha256(k),
       beginCell()
         .storeUint8(SNAKE_PREFIX)
         .storeBuffer(Buffer.from(v, jettonOnChainMetadataSpec[k])) // TODO imageUri is supposed to be saved ascii
@@ -50,7 +52,7 @@ function buildOnChainData(data: { [s: string]: string }): Cell {
   return dict.endDict() as Cell;
 }
 
-function parseOnChainData(contentCell: Cell) {
+export function parseOnChainData(contentCell: Cell) {
   // Note that this relies on what is (perhaps) an internal implementation detail:
   // "ton" library dict parser converts: key (provided as buffer) => BN(base10)
   // and upon parsing, it reads it back to a BN(base10)
@@ -64,20 +66,20 @@ function parseOnChainData(contentCell: Cell) {
   const dict = contentSlice.readDict(KEYLEN, (s) => {
     const valSlice = s.toCell().beginParse();
     if (valSlice.readUint(8).toNumber() !== SNAKE_PREFIX) throw new Error("Only snake format is supported");
-    return s.toCell().beginParse().readRemainingBytes();
+    return valSlice.readRemainingBytes();
   });
-  
+
   const res: { [s: string]: string } = {};
 
   Object.keys(jettonOnChainMetadataSpec).forEach((k) => {
-    const val = dict.get(toKey(_hash(k)))?.toString(jettonOnChainMetadataSpec[k]);
+    const val = dict.get(toKey(sha256(k).toString("hex")))?.toString(jettonOnChainMetadataSpec[k]);
     if (val) res[k] = val;
   });
 
   return res;
 }
 
-export function initData(owner: Address, contentUri: string, data: { [s: string]: string }) {
+export function initData(owner: Address, data: { [s: string]: string | undefined }) {
   return beginCell()
     .storeCoins(0)
     .storeAddress(owner)
