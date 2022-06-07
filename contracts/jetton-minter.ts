@@ -3,6 +3,7 @@ import { Cell, beginCell, Address, toNano, beginDict, parseDict, parseDictRefs, 
 
 const OFFCHAIN_CONTENT_PREFIX = 0x01;
 const ONCHAIN_CONTENT_PREFIX = 0x00;
+const SNAKE_PREFIX = 0x00;
 
 import walletHex from "../build/jetton-wallet-hex.json";
 import minterHex from "../build/jetton-minter-hex.json";
@@ -40,6 +41,7 @@ function buildOnChainData(data: { [s: string]: string }): Cell {
     dict.storeCell(
       hash(k),
       beginCell()
+        .storeUint8(SNAKE_PREFIX)
         .storeBuffer(Buffer.from(v, jettonOnChainMetadataSpec[k])) // TODO imageUri is supposed to be saved ascii
         .endCell()
     );
@@ -59,7 +61,12 @@ function parseOnChainData(contentCell: Cell) {
   const contentSlice = contentCell.beginParse();
   if (contentSlice.readUint(8).toNumber() !== ONCHAIN_CONTENT_PREFIX) throw new Error("Expected onchain content marker");
 
-  const dict = contentSlice.readDict(KEYLEN, (s) => s.toCell().beginParse().readRemainingBytes());
+  const dict = contentSlice.readDict(KEYLEN, (s) => {
+    const valSlice = s.toCell().beginParse();
+    if (valSlice.readUint(8).toNumber() !== SNAKE_PREFIX) throw new Error("Only snake format is supported");
+    return s.toCell().beginParse().readRemainingBytes();
+  });
+  
   const res: { [s: string]: string } = {};
 
   Object.keys(jettonOnChainMetadataSpec).forEach((k) => {
