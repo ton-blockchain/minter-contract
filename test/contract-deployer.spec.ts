@@ -5,6 +5,8 @@ import { TransactionDetails, TransactionSender } from "../lib/transaction-sender
 import chai, { expect } from "chai";
 import * as sinon from "ts-sinon";
 import sinonChai from "sinon-chai";
+import { createWalletSession } from "../lib/wallets";
+import { Adapters } from "../lib/wallets/types";
 
 chai.use(sinonChai);
 

@@ -1,6 +1,7 @@
-import { TransactionSender } from "./transaction-sender";
 import BN from "bn.js";
 import { Address, Cell, contractAddress, StateInit } from "ton";
+import { walletService } from "./wallets";
+import { Adapters } from "./wallets/types";
 
 interface ContractDeployDetails {
   deployer: Address;
@@ -16,11 +17,11 @@ export class ContractDeployer {
     return contractAddress({ workchain: 0, initialData: params.data, initialCode: params.code });
   }
 
-  async deployContract(params: ContractDeployDetails, transactionSender: TransactionSender): Promise<Address> {
+  async deployContract(params: ContractDeployDetails, adapterId: Adapters, session: any): Promise<Address> {
     const _contractAddress = this.addressForContract(params);
 
     if (!params.dryRun) {
-      await transactionSender.sendTransaction({
+      await walletService.requestTransaction(adapterId, session, {
         to: _contractAddress,
         value: params.value,
         stateInit: new StateInit({ data: params.data, code: params.code }),
@@ -31,3 +32,4 @@ export class ContractDeployer {
     return _contractAddress;
   }
 }
+
