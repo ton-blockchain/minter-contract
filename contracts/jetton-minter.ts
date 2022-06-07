@@ -1,7 +1,8 @@
 import BN from "bn.js";
-import { Cell, beginCell, Address, toNano } from "ton";
+import { Cell, beginCell, Address, toNano, beginDict, parseDict, parseDictRefs, BitString } from "ton";
 
 const OFFCHAIN_CONTENT_PREFIX = 0x01;
+const ONCHAIN_CONTENT_PREFIX = 0x00;
 
 import walletHex from "../build/jetton-wallet-hex.json";
 import minterHex from "../build/jetton-minter-hex.json";
@@ -14,17 +15,66 @@ enum OPS {
   InternalTransfer = 0x178d4519,
   Transfer = 0xf8a7ea5,
 }
+import crypto from "crypto";
 
-export function initData(owner: Address, contentUri: string) {
+const jettonOnChainMetadataSpec: { [key: string]: "utf8" | "ascii" | undefined } = {
+  name: "utf8",
+  description: "utf8",
+  image: "ascii",
+  symbol: "utf8",
+};
+
+const _hash = (str: string) => crypto.createHash("sha256").update(str).digest("hex");
+const hash = (str: string) => Buffer.from(_hash(str), "hex");
+
+// TODO: support for vals over 1024 bytes (otherwise it'll fail here)
+function buildOnChainData(data: { [s: string]: string }): Cell {
+  const _hash = (str: string) => crypto.createHash("sha256").update(str).digest("hex");
+  const hash = (str: string) => Buffer.from(_hash(str), "hex");
+  const KEYLEN = 256;
+  const dict = beginDict(KEYLEN);
+
+  Object.entries(data).forEach(([k, v]: [string, string]) => {
+    if (!jettonOnChainMetadataSpec[k]) throw new Error(`Unsupported onchain key: ${k}`);
+
+    dict.storeCell(
+      hash(k),
+      beginCell()
+        .storeBuffer(Buffer.from(v, jettonOnChainMetadataSpec[k])) // TODO imageUri is supposed to be saved ascii
+        .endCell()
+    );
+  });
+
+  return dict.endDict() as Cell;
+}
+
+function parseOnChainData(contentCell: Cell) {
+  // Note that this relies on what is (perhaps) an internal implementation detail:
+  // "ton" library dict parser converts: key (provided as buffer) => BN(base10)
+  // and upon parsing, it reads it back to a BN(base10)
+  // tl;dr if we want to read the map back to a JSON with string keys, we have to convert BN(10) back to hex
+  const toKey = (str: string) => new BN(str, "hex").toString(10);
+
+  const KEYLEN = 256;
+  const contentSlice = contentCell.beginParse();
+  if (contentSlice.readUint(8).toNumber() !== ONCHAIN_CONTENT_PREFIX) throw new Error("Expected onchain content marker");
+
+  const dict = contentSlice.readDict(KEYLEN, (s) => s.toCell().beginParse().readRemainingBytes());
+  const res: { [s: string]: string } = {};
+
+  Object.keys(jettonOnChainMetadataSpec).forEach((k) => {
+    const val = dict.get(toKey(_hash(k)))?.toString(jettonOnChainMetadataSpec[k]);
+    if (val) res[k] = val;
+  });
+
+  return res;
+}
+
+export function initData(owner: Address, contentUri: string, data: { [s: string]: string }) {
   return beginCell()
     .storeCoins(0)
     .storeAddress(owner)
-    .storeRef(
-      beginCell()
-        .storeInt(OFFCHAIN_CONTENT_PREFIX, 8) // off-chain marker (https://github.com/ton-blockchain/TIPs/issues/64)
-        .storeBuffer(Buffer.from(contentUri, "ascii"))
-        .endCell()
-    )
+    .storeRef(beginCell().storeInt(ONCHAIN_CONTENT_PREFIX, 8).storeDict(buildOnChainData(data)).endCell())
     .storeRef(JETTON_WALLET_CODE)
     .endCell();
 }
