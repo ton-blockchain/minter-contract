@@ -43,6 +43,7 @@ export class JettonDeployController {
     this.#client = client;
   }
 
+  // TODO remove deployer + change jettonIconImageData to jettonIconURI
   async createJetton(params: JettonDeployParams, contractDeployer: ContractDeployer, transactionSender: TransactionSender, fileUploader: FileUploader) {
     params.onProgress?.(JettonDeployState.BALANCE_CHECK);
     const balance = await this.#client.getBalance(params.owner);
