@@ -11,7 +11,8 @@
     "skipLibCheck": true,
     "rootDir": "",
     "outDir": "dist",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "declaration": true
   },
   "include": ["lib"],
   "exclude": ["node_modules", "dist"],

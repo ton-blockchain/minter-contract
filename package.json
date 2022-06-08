@@ -9,11 +9,16 @@
     "test": "mocha  --exit test/**/*.spec.ts",
     "test:coverage": "nyc mocha --exit test/**/*.spec.ts",
     "test:watch": "mocha --watch --watch-files test/**/*.ts,lib/**/*.ts,contracts/**/*.ts test/**/*.spec.ts",
-    "build": "ts-node ./build/_build.ts",
-    "deploy": "ts-node ./build/_deploy.ts",
+    "buildcontracts": "ts-node ./build/_build.ts",
+    "deploycontracts": "ts-node ./build/_deploy.ts",
+    "build": "ncc build index.ts --target=es5",
     "deploy:testnet": "ts-node ./build/_deploy.ts",
     "postinstall": "ts-node ./build/_setup.ts"
   },
+  "files": [
+    "dist"
+  ],
+  "types": "dist/index.d.ts",
   "devDependencies": {
     "@swc/core": "^1.2.177",
     "@types/bn.js": "^5.1.0",
