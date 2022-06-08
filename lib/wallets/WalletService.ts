@@ -1,10 +1,9 @@
 import { Cell } from "ton";
 import { TonhubConnector } from "ton-x";
 import { TransactionDetails } from "../transaction-sender";
+import { TonChromeExtensionWalletAdapter, TonhubWalletAdapter } from "./adapters";
 
-import { TonhubWalletAdapter } from "./adapters/TonhubWalletAdapter";
-import { TonWalletWalletAdapter } from "./adapters/TonWalletAdapter";
-import { WalletAdapter, TransactionRequest, Wallet, Adapters } from "./types";
+import { WalletAdapter, Wallet, Adapters } from "./types";
 
 const IS_TESTNET = false;
 
@@ -15,6 +14,11 @@ export class WalletService {
     console.log(this.adapters);
 
     this.adapters.set(adapterId, adapter);
+  }
+
+  constructor() {
+    this.registerAdapter(Adapters.TON_WALLET, new TonChromeExtensionWalletAdapter());
+    this.registerAdapter(Adapters.TON_HUB, new TonhubWalletAdapter(IS_TESTNET));
   }
 
   createSession<S>(adapterId: string, appName: string): Promise<S> {
@@ -32,7 +36,7 @@ export class WalletService {
     return adapter.getWallet(session);
   }
 
-  async requestTransaction(adapterId: string, session: any, request: TransactionDetails, onSuccess?: () => void): Promise<void | boolean> {
+  async requestTransaction<S>(adapterId: string, session: any, request: TransactionDetails, onSuccess?: () => void): Promise<void | boolean> {
     const adapter = this.adapters.get(adapterId) as WalletAdapter<S>;
 
     return adapter.requestTransaction(session, request, onSuccess);
@@ -40,8 +44,3 @@ export class WalletService {
 }
 
 export const walletService = new WalletService();
-
-const tonhubConnector = new TonhubConnector({ testnet: IS_TESTNET });
-
-walletService.registerAdapter(Adapters.TON_HUB, new TonhubWalletAdapter(tonhubConnector));
-walletService.registerAdapter(Adapters.TON_WALLET, new TonWalletWalletAdapter());

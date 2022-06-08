@@ -7,8 +7,7 @@ import { TransactionRequest, Wallet, WalletAdapter } from "../types";
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-
-export class TonWalletWalletAdapter implements WalletAdapter<boolean> {
+ export class TonChromeExtensionWalletAdapter implements WalletAdapter<boolean> {
   async createSession(): Promise<boolean> {
     try {
       await tonWalletClient.ready(150);
@@ -63,3 +62,5 @@ export class TonWalletWalletAdapter implements WalletAdapter<boolean> {
     }
   }
 }
+
+

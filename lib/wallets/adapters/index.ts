@@ -1,2 +1,2 @@
-export * from './TonWalletAdapter'
+export * from './TonChromeExtensionWalletAdapter'
 export * from './TonhubWalletAdapter'
