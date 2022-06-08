@@ -32,17 +32,18 @@ describe("Jetton", () => {
     );
 
   beforeEach(async () => {
-    const dataCell = jetton_minter.initData(OWNER_ADDRESS,"https://api.jsonbin.io/b/628ced3405f31f68b3a53622");
+    const dataCell = jetton_minter.initData(OWNER_ADDRESS, {name: "MY_JETTON", symbol: "MJT"});
     minterContract = (await JettonMinter.create(JETTON_MINTER_CODE, dataCell)) as JettonMinter; // TODO: 🤮;
   });
 
   it("should get minter initialization data correctly", async () => {
     const call = await minterContract.contract.invokeGetMethod("get_jetton_data", []);
-    const { totalSupply, address, contentUri } = parseJettonDetails(call);
+    const { totalSupply, address, metadata } = parseJettonDetails(call); 
 
     expect(totalSupply).to.be.bignumber.equal(new BN(0));
     expect(address.toFriendly()).to.equal(OWNER_ADDRESS.toFriendly());
-    // expect(contentUri).to.equal("https://api.jsonbin.io/b/628ced3405f31f68b3a53622");
+    expect(metadata.name).to.equal("MY_JETTON");
+    expect(metadata.symbol).to.equal("MJT");
   });
 
   it("offchain and onchain jwallet should return the same address", async () => {

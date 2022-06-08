@@ -17,7 +17,7 @@ enum OPS {
 }
 import { Sha256 } from "@aws-crypto/sha256-js";
 
-type JettonMetaDataKeys = "name" | "description" | "image" | "symbol";
+export type JettonMetaDataKeys = "name" | "description" | "image" | "symbol";
 
 const jettonOnChainMetadataSpec: { [key in JettonMetaDataKeys]: "utf8" | "ascii" | undefined } = {
   name: "utf8",
