@@ -1,9 +1,9 @@
 {
-  "name": "tonstarter-contracts",
-  "description": "",
-  "version": "0.0.0",
+  "name": "jetton-deployer-contracts",
+  "description": "Javascript library for deploying Jettons on the TON blockchain",
+  "version": "0.0.1",
   "license": "MIT",
-  "author": "",
+  "author": "ton-defi.org",
   "scripts": {
     "prettier": "npx prettier --write '{test,contracts,build}/**/*.{ts,js,json}'",
     "test": "mocha  --exit test/**/*.spec.ts",

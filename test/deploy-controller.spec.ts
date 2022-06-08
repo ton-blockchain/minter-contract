@@ -9,7 +9,7 @@ import { JettonDeployController, JETTON_DEPLOY_GAS } from "../lib/deploy-control
 import BN from "bn.js";
 import { FileUploader } from "../lib/file-uploader";
 import chaiAsPromised from "chai-as-promised";
-import axios from "axios";
+import { buildOnChainData } from "../contracts/jetton-minter";
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -80,7 +80,6 @@ describe("Deploy Controller", () => {
 
     // await deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub);
     await expect(deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.fulfilled;
-    expect(fileUploaderStub.upload).to.have.been.calledTwice;
     expect(contractDeployer.deployContract).to.have.been.calledOnce;
   });
 
@@ -94,7 +93,6 @@ describe("Deploy Controller", () => {
     });
 
     await expect(deployController.createJetton({ ...deployPayload, amountToMint: toNano(1) }, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.rejected;
-    expect(fileUploaderStub.upload).to.have.been.calledTwice;
     expect(contractDeployer.deployContract).to.have.been.calledOnce;
   });
 
@@ -117,20 +115,20 @@ describe("Deploy Controller", () => {
     });
 
     await expect(deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.fulfilled;
-    expect(fileUploaderStub.upload).to.have.been.calledTwice;
     expect(contractDeployer.deployContract).to.not.have.been.called;
   });
 
   it("Retrieves jwallet details", async () => {
-    const STUB_URI = "STUB";
-
     stubTonClientGet(tonClient, {
-      get_jetton_data: [new BN(0), new BN(0), addressToCell(randomAddress("owner")), beginCell().storeInt(1, 8).storeBuffer(Buffer.from(STUB_URI, "ascii")).endCell()],
+      get_jetton_data: [new BN(0), new BN(0), addressToCell(randomAddress("owner")), buildOnChainData({"name": "SOME_NAME"})],
       get_wallet_address: [addressToCell(randomAddress("jwalletaddr"))],
       get_wallet_data: [new BN(0)],
     });
+    
+    const x = await deployController.getJettonDetails(randomAddress("minteraddr"), randomAddress("jwalletowneraddr"));
 
-    sinon.default.stub(axios, "get").withArgs(STUB_URI).resolves("STUB DATA");
+    expect(x.jetton.name).to.equal("SOME_NAME");
+
     await expect(deployController.getJettonDetails(randomAddress("minteraddr"), randomAddress("jwalletowneraddr"))).to.be.fulfilled;
   });
 });
