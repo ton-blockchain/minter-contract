@@ -32,10 +32,9 @@ export enum JettonDeployState {
 export interface JettonDeployParams {
   jettonName: string;
   jettonSymbol: string;
-  jettonIconImageData: File | Buffer;
   jettonDescripton?: string;
   owner: Address;
-  mintToOwner: boolean;
+  imageUri?: string;
   amountToMint: BN;
   onProgress?: (state: JettonDeployState, error?: Error, msg?: string) => void;
 }
@@ -52,7 +51,7 @@ export class JettonDeployController {
     contractDeployer: ContractDeployer,
     adapterId: Adapters,
     session: any
-  ) {
+  ): Promise<Address> {
     params.onProgress?.(JettonDeployState.BALANCE_CHECK);
     const balance = await this.#client.getBalance(params.owner);
     if (balance.lt(JETTON_DEPLOY_GAS)) throw new Error("Not enough balance in deployer wallet");
@@ -61,7 +60,6 @@ export class JettonDeployController {
       name: params.jettonName,
       symbol: params.jettonSymbol,
       description: params.jettonDescripton,
-      // TODO image: ipfsImageLink,
     };
 
     const deployParams = {
@@ -112,6 +110,8 @@ export class JettonDeployController {
     if (!(parseGetMethodCall(jwalletDataRes.stack)[0] as BN).eq(params.amountToMint))
       throw new Error("Mint fail");
     params.onProgress?.(JettonDeployState.DONE);
+
+    return contractAddr;
   }
 
   async getJettonDetails(contractAddr: Address, owner: Address) {
