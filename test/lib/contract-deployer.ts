@@ -27,12 +27,19 @@ export class WrappedSmartContract {
   }
 
   // TODO extends typeof / instancetype
-  static async create<T extends typeof WrappedSmartContract>(codeCell: Cell, dataCell: Cell): Promise<InstanceType<T>> {
+  static async create<T extends typeof WrappedSmartContract>(
+    codeCell: Cell,
+    dataCell: Cell
+  ): Promise<InstanceType<T>> {
     const contract = await SmartContract.fromCell(codeCell, dataCell, {
       debug: true,
     });
 
-    const ca = contractAddress({ workchain: WORKCHAIN, initialCode: codeCell, initialData: dataCell });
+    const ca = contractAddress({
+      workchain: WORKCHAIN,
+      initialCode: codeCell,
+      initialData: dataCell,
+    });
     contract.setC7Config({ myself: ca }); // TODO -> set the rest of the config
 
     return new this(contract, ca) as InstanceType<T>;

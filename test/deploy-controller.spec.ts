@@ -9,7 +9,7 @@ import { JettonDeployController, JETTON_DEPLOY_GAS } from "../lib/deploy-control
 import BN from "bn.js";
 import { FileUploader } from "../lib/file-uploader";
 import chaiAsPromised from "chai-as-promised";
-import axios from "axios";
+import { buildOnChainData } from "../contracts/jetton-minter";
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
@@ -25,7 +25,7 @@ function getMethodRetValToStack(args) {
     } else if (a instanceof Cell) {
       return cellToB64GetCall(a);
     } else {
-        throw "Unknown type";
+      throw "Unknown type";
     }
   });
 }
@@ -70,7 +70,13 @@ describe("Deploy Controller", () => {
   });
 
   it("Deploys a jetton wallet", async () => {
-    tonClient.isContractDeployed.onFirstCall().resolves(false).onSecondCall().resolves(true).onThirdCall().resolves(true);
+    tonClient.isContractDeployed
+      .onFirstCall()
+      .resolves(false)
+      .onSecondCall()
+      .resolves(true)
+      .onThirdCall()
+      .resolves(true);
     tonClient.getBalance.resolves(toNano(1));
     stubTonClientGet(tonClient, {
       get_jetton_data: [new BN(0), new BN(0), addressToCell(randomAddress("owner"))],
@@ -79,13 +85,25 @@ describe("Deploy Controller", () => {
     });
 
     // await deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub);
-    await expect(deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.fulfilled;
-    expect(fileUploaderStub.upload).to.have.been.calledTwice;
+    await expect(
+      deployController.createJetton(
+        deployPayload,
+        contractDeployer,
+        transactionSenderStub,
+        fileUploaderStub
+      )
+    ).to.be.fulfilled;
     expect(contractDeployer.deployContract).to.have.been.calledOnce;
   });
 
   it("Fails if amount was not minted to owner as provided", async () => {
-    tonClient.isContractDeployed.onFirstCall().resolves(false).onSecondCall().resolves(true).onThirdCall().resolves(true);
+    tonClient.isContractDeployed
+      .onFirstCall()
+      .resolves(false)
+      .onSecondCall()
+      .resolves(true)
+      .onThirdCall()
+      .resolves(true);
     tonClient.getBalance.resolves(toNano(1));
     stubTonClientGet(tonClient, {
       get_jetton_data: [new BN(0), new BN(0), addressToCell(randomAddress("owner"))],
@@ -93,8 +111,14 @@ describe("Deploy Controller", () => {
       get_wallet_data: [new BN(0)],
     });
 
-    await expect(deployController.createJetton({ ...deployPayload, amountToMint: toNano(1) }, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.rejected;
-    expect(fileUploaderStub.upload).to.have.been.calledTwice;
+    await expect(
+      deployController.createJetton(
+        { ...deployPayload, amountToMint: toNano(1) },
+        contractDeployer,
+        transactionSenderStub,
+        fileUploaderStub
+      )
+    ).to.be.rejected;
     expect(contractDeployer.deployContract).to.have.been.calledOnce;
   });
 
@@ -102,9 +126,14 @@ describe("Deploy Controller", () => {
     tonClient.isContractDeployed.resolves(true);
     tonClient.getBalance.resolves(JETTON_DEPLOY_GAS.sub(new BN(1)));
 
-    await expect(deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.rejectedWith(
-      "Not enough balance in deployer wallet"
-    );
+    await expect(
+      deployController.createJetton(
+        deployPayload,
+        contractDeployer,
+        transactionSenderStub,
+        fileUploaderStub
+      )
+    ).to.be.rejectedWith("Not enough balance in deployer wallet");
   });
 
   it("Skips deployment if contract is already deployed", async () => {
@@ -116,21 +145,41 @@ describe("Deploy Controller", () => {
       get_wallet_data: [new BN(0)],
     });
 
-    await expect(deployController.createJetton(deployPayload, contractDeployer, transactionSenderStub, fileUploaderStub)).to.be.fulfilled;
-    expect(fileUploaderStub.upload).to.have.been.calledTwice;
+    await expect(
+      deployController.createJetton(
+        deployPayload,
+        contractDeployer,
+        transactionSenderStub,
+        fileUploaderStub
+      )
+    ).to.be.fulfilled;
     expect(contractDeployer.deployContract).to.not.have.been.called;
   });
 
   it("Retrieves jwallet details", async () => {
-    const STUB_URI = "STUB";
-
     stubTonClientGet(tonClient, {
-      get_jetton_data: [new BN(0), new BN(0), addressToCell(randomAddress("owner")), beginCell().storeInt(1, 8).storeBuffer(Buffer.from(STUB_URI, "ascii")).endCell()],
+      get_jetton_data: [
+        new BN(0),
+        new BN(0),
+        addressToCell(randomAddress("owner")),
+        buildOnChainData({ name: "SOME_NAME" }),
+      ],
       get_wallet_address: [addressToCell(randomAddress("jwalletaddr"))],
       get_wallet_data: [new BN(0)],
     });
 
-    sinon.default.stub(axios, "get").withArgs(STUB_URI).resolves("STUB DATA");
-    await expect(deployController.getJettonDetails(randomAddress("minteraddr"), randomAddress("jwalletowneraddr"))).to.be.fulfilled;
+    const x = await deployController.getJettonDetails(
+      randomAddress("minteraddr"),
+      randomAddress("jwalletowneraddr")
+    );
+
+    expect(x.jetton.name).to.equal("SOME_NAME");
+
+    await expect(
+      deployController.getJettonDetails(
+        randomAddress("minteraddr"),
+        randomAddress("jwalletowneraddr")
+      )
+    ).to.be.fulfilled;
   });
 });

@@ -14,7 +14,11 @@ interface ContractDeployDetails {
 
 export class ContractDeployer {
   addressForContract(params: ContractDeployDetails) {
-    return contractAddress({ workchain: 0, initialData: params.data, initialCode: params.code });
+    return contractAddress({
+      workchain: 0,
+      initialData: params.data,
+      initialCode: params.code,
+    });
   }
 
   async deployContract(params: ContractDeployDetails, adapterId: Adapters, session: any): Promise<Address> {

@@ -5,9 +5,13 @@ import { ContractDeployer } from "./contract-deployer";
 // TODO temporary
 import axios from "axios";
 import axiosThrottle from "axios-request-throttle";
-import { FileUploader } from "./file-uploader";
 import { parseGetMethodCall, waitForContractDeploy } from "./utils";
-import { initData, mintBody, JETTON_MINTER_CODE } from "../contracts/jetton-minter";
+import {
+  initData,
+  mintBody,
+  JETTON_MINTER_CODE,
+  parseOnChainData,
+} from "../contracts/jetton-minter";
 import { Adapters } from "./wallets/types";
 axiosThrottle.use(axios, { requestsPerSecond: 0.9 }); // required since toncenter jsonRPC limits to 1 req/sec without API key
 
@@ -44,24 +48,21 @@ export class JettonDeployController {
   }
 
   async createJetton(params: JettonDeployParams, contractDeployer: ContractDeployer,
-    adapterId: Adapters, session:any, fileUploader: FileUploader) {
+    adapterId: Adapters, session:any) {
     params.onProgress?.(JettonDeployState.BALANCE_CHECK);
     const balance = await this.#client.getBalance(params.owner);
     if (balance.lt(JETTON_DEPLOY_GAS)) throw new Error("Not enough balance in deployer wallet");
 
-    const ipfsImageLink = await fileUploader.upload(params.jettonIconImageData);
-    const ipfsJsonLink = await fileUploader.upload(
-      JSON.stringify({
-        name: params.jettonName,
-        symbol: params.jettonSymbol,
-        description: params.jettonDescripton,
-        image: ipfsImageLink,
-      })
-    );
+    const metadata = {
+      name: params.jettonName,
+      symbol: params.jettonSymbol,
+      description: params.jettonDescripton,
+      // TODO image: ipfsImageLink,
+    };
 
     const deployParams = {
       code: JETTON_MINTER_CODE,
-      data: initData(params.owner, ipfsJsonLink),
+      data: initData(params.owner, metadata),
       deployer: params.owner,
       value: JETTON_DEPLOY_GAS,
       message: mintBody(params.owner, params.amountToMint),
@@ -80,15 +81,23 @@ export class JettonDeployController {
     const jettonDataRes = await this.#client.callGetMethod(contractAddr, "get_jetton_data");
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const deployedOwnerAddress = (parseGetMethodCall(jettonDataRes.stack)[2] as Cell).beginParse().readAddress()!;
-    if (deployedOwnerAddress.toFriendly() !== params.owner.toFriendly()) throw new Error("Contract deployed incorrectly");
+    const deployedOwnerAddress = (parseGetMethodCall(jettonDataRes.stack)[2] as Cell)
+      .beginParse()
+      .readAddress()!;
+    if (deployedOwnerAddress.toFriendly() !== params.owner.toFriendly())
+      throw new Error("Contract deployed incorrectly");
 
     // todo what's the deal with idx:false
     const jwalletAddressRes = await this.#client.callGetMethod(contractAddr, "get_wallet_address", [
-      ["tvm.Slice", beginCell().storeAddress(params.owner).endCell().toBoc({ idx: false }).toString("base64")],
+      [
+        "tvm.Slice",
+        beginCell().storeAddress(params.owner).endCell().toBoc({ idx: false }).toString("base64"),
+      ],
     ]);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const ownerJWalletAddr = (parseGetMethodCall(jwalletAddressRes.stack)[0] as Cell).beginParse().readAddress()!;
+    const ownerJWalletAddr = (parseGetMethodCall(jwalletAddressRes.stack)[0] as Cell)
+      .beginParse()
+      .readAddress()!;
 
     params.onProgress?.(JettonDeployState.AWAITING_MINTER_DEPLOY);
     await waitForContractDeploy(ownerJWalletAddr, this.#client);
@@ -96,28 +105,32 @@ export class JettonDeployController {
     params.onProgress?.(JettonDeployState.VERIFY_MINT, undefined, contractAddr.toFriendly()); // TODO better way of emitting the contract?
 
     const jwalletDataRes = await this.#client.callGetMethod(ownerJWalletAddr, "get_wallet_data");
-    if (!(parseGetMethodCall(jwalletDataRes.stack)[0] as BN).eq(params.amountToMint)) throw new Error("Mint fail");
+    if (!(parseGetMethodCall(jwalletDataRes.stack)[0] as BN).eq(params.amountToMint))
+      throw new Error("Mint fail");
     params.onProgress?.(JettonDeployState.DONE);
   }
 
   async getJettonDetails(contractAddr: Address, owner: Address) {
     const jettonDataRes = await this.#client.callGetMethod(contractAddr, "get_jetton_data");
 
-    const contentCell = (parseGetMethodCall(jettonDataRes.stack)[3] as Cell).beginParse();
-    contentCell.readInt(8);
-    const jsonURI = contentCell.readRemainingBytes().toString("ascii");
-    const jsonData = (await axios.get(jsonURI)).data;
+    const contentCell = parseGetMethodCall(jettonDataRes.stack)[3] as Cell;
+    const dict = parseOnChainData(contentCell);
 
     const jwalletAdressRes = await this.#client.callGetMethod(contractAddr, "get_wallet_address", [
-      ["tvm.Slice", beginCell().storeAddress(owner).endCell().toBoc({ idx: false }).toString("base64")],
+      [
+        "tvm.Slice",
+        beginCell().storeAddress(owner).endCell().toBoc({ idx: false }).toString("base64"),
+      ],
     ]);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const ownerJWalletAddr = (parseGetMethodCall(jwalletAdressRes.stack)[0] as Cell).beginParse().readAddress()!;
+    const ownerJWalletAddr = (parseGetMethodCall(jwalletAdressRes.stack)[0] as Cell)
+      .beginParse()
+      .readAddress()!;
 
     const jwalletDataRes = await this.#client.callGetMethod(ownerJWalletAddr, "get_wallet_data");
 
     return {
-      jetton: { ...jsonData, contractAddress: contractAddr.toFriendly() },
+      jetton: { ...dict, contractAddress: contractAddr.toFriendly() },
       wallet: {
         jettonAmount: (parseGetMethodCall(jwalletDataRes.stack)[0] as BN).toString(),
         ownerJWallet: ownerJWalletAddr.toFriendly(),

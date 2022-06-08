@@ -1,5 +1,16 @@
 import BN from "bn.js";
-import { Address, Cell, CellMessage, CommonMessageInfo, InternalMessage, SendMode, StateInit, TonClient, WalletContract, WalletV3R1Source } from "ton";
+import {
+  Address,
+  Cell,
+  CellMessage,
+  CommonMessageInfo,
+  InternalMessage,
+  SendMode,
+  StateInit,
+  TonClient,
+  WalletContract,
+  WalletV3R1Source,
+} from "ton";
 import { mnemonicToWalletKey } from "ton-crypto";
 
 export interface TransactionDetails {
@@ -39,21 +50,20 @@ export class ChromeExtensionTransactionSender implements TransactionSender {
 // TODO this resembles the ton-starter deployer. we can perhaps utilize this
 export class PrivKeyTransactionSender implements TransactionSender {
   #mnemonic: string[];
+  #tonClient: TonClient;
 
-  constructor(mnemonic: string[]) {
+  constructor(mnemonic: string[], tonClient: TonClient) {
     this.#mnemonic = mnemonic;
+    this.#tonClient = tonClient;
   }
 
   async sendTransaction(transactionDetails: TransactionDetails): Promise<void> {
     // TODO: think where the client should come from
-    const c = new TonClient({
-      endpoint: api,
-    });
 
     const wk = await mnemonicToWalletKey(this.#mnemonic);
 
     const walletContract = WalletContract.create(
-      c,
+      this.#tonClient,
       WalletV3R1Source.create({
         publicKey: wk.publicKey,
         workchain: 0,
@@ -94,7 +104,7 @@ export class PrivKeyTransactionSender implements TransactionSender {
       }),
     });
 
-    await c.sendExternalMessage(walletContract, transfer);
+    await this.#tonClient.sendExternalMessage(walletContract, transfer);
   }
 }
 
@@ -123,7 +133,9 @@ export class TonDeepLinkTransactionSender implements TransactionSender {
     transactionDetails.stateInit.writeTo(INIT_CELL);
     const b64InitCell = this.#encodeBase64URL(INIT_CELL.toBoc());
 
-    let link = `${this.#deepLinkPrefix}://transfer/${transactionDetails.to.toFriendly()}?amount=${transactionDetails.value}&init=${b64InitCell}`;
+    let link = `${this.#deepLinkPrefix}://transfer/${transactionDetails.to.toFriendly()}?amount=${
+      transactionDetails.value
+    }&init=${b64InitCell}`;
 
     if (transactionDetails.message) {
       const b64MsgCell = this.#encodeBase64URL(transactionDetails.message.toBoc());
