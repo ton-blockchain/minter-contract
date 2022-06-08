@@ -59,6 +59,5 @@
   "dependencies": {
     "@aws-crypto/sha256-js": "^2.0.1",
     "commander": "^9.3.0"
-   
   }
 }

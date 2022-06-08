@@ -1,1 +1,1 @@
-export * from './TonWalletClient'
+export * from "./TonWalletClient";

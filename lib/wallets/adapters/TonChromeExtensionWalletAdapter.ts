@@ -7,7 +7,7 @@ import { TransactionRequest, Wallet, WalletAdapter } from "../types";
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
- export class TonChromeExtensionWalletAdapter implements WalletAdapter<boolean> {
+export class TonChromeExtensionWalletAdapter implements WalletAdapter<boolean> {
   async createSession(): Promise<boolean> {
     try {
       await tonWalletClient.ready(150);
@@ -38,7 +38,11 @@ export function delay(ms: number) {
     return !!(window as any).ton?.isTonWallet;
   }
 
-  async requestTransaction(_session: any, request: TransactionDetails, onSuccess?: () => void): Promise<void> {
+  async requestTransaction(
+    _session: any,
+    request: TransactionDetails,
+    onSuccess?: () => void
+  ): Promise<void> {
     const INIT_CELL = new Cell();
     request.stateInit.writeTo(INIT_CELL);
     const b64InitCell = INIT_CELL.toBoc().toString("base64");
@@ -62,5 +66,3 @@ export function delay(ms: number) {
     }
   }
 }
-
-

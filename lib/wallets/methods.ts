@@ -1,7 +1,13 @@
 import { Adapters, Wallet } from "./types";
-import { walletService } from "./WalletService";
+import { WalletService } from "./WalletService";
 
-const createWalletSession = async (adapterId: Adapters, appName: string, onWalletConnect?: (value: Wallet) => void) => {
+const walletService = new WalletService();
+
+const createWalletSession = async (
+  adapterId: Adapters,
+  appName: string,
+  onWalletConnect?: (value: Wallet) => void
+) => {
   try {
     const _session = await walletService.createSession(adapterId, appName);
     awaitReadiness(adapterId, _session, onWalletConnect);
@@ -13,7 +19,11 @@ const createWalletSession = async (adapterId: Adapters, appName: string, onWalle
   }
 };
 
-const awaitReadiness = async (adapterId: Adapters, session: any, onWalletConnect?: (value: Wallet) => void) => {
+const awaitReadiness = async (
+  adapterId: Adapters,
+  session: any,
+  onWalletConnect?: (value: Wallet) => void
+) => {
   try {
     const wallet = await walletService.awaitReadiness(adapterId, session);
 

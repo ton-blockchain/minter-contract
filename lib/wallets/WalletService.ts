@@ -36,11 +36,16 @@ export class WalletService {
     return adapter.getWallet(session);
   }
 
-  async requestTransaction<S>(adapterId: string, session: any, request: TransactionDetails, onSuccess?: () => void): Promise<void | boolean> {
+  async requestTransaction<S>(
+    adapterId: string,
+    session: any,
+    request: TransactionDetails,
+    onSuccess?: () => void
+  ): Promise<void | boolean> {
     const adapter = this.adapters.get(adapterId) as WalletAdapter<S>;
 
     return adapter.requestTransaction(session, request, onSuccess);
   }
 }
 
-export const walletService = new WalletService();
+export default WalletService;

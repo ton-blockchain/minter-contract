@@ -47,8 +47,12 @@ export class JettonDeployController {
     this.#client = client;
   }
 
-  async createJetton(params: JettonDeployParams, contractDeployer: ContractDeployer,
-    adapterId: Adapters, session:any) {
+  async createJetton(
+    params: JettonDeployParams,
+    contractDeployer: ContractDeployer,
+    adapterId: Adapters,
+    session: any
+  ) {
     params.onProgress?.(JettonDeployState.BALANCE_CHECK);
     const balance = await this.#client.getBalance(params.owner);
     if (balance.lt(JETTON_DEPLOY_GAS)) throw new Error("Not enough balance in deployer wallet");
