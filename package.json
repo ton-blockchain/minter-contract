@@ -22,6 +22,7 @@
     "@types/mocha": "^9.1.1",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
     "@typescript-eslint/parser": "^5.27.0",
+    "@vercel/ncc": "^0.34.0",
     "axios-request-throttle": "^1.0.0",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
