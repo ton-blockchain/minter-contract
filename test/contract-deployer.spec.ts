@@ -1,18 +1,18 @@
 import { ContractDeployer } from "../lib/contract-deployer";
 import { Address, Cell, toNano } from "ton";
 import { randomAddress } from "./helpers";
-import { TransactionDetails, TransactionSender } from "../lib/transaction-sender";
 import chai, { expect } from "chai";
 import * as sinon from "ts-sinon";
 import sinonChai from "sinon-chai";
 import { createWalletSession } from "../lib/wallets";
 import { Adapters } from "../lib/wallets/types";
+import { WalletService, walletService } from "../lib/wallets/WalletService";
 
 chai.use(sinonChai);
 
 describe("Contract Deployer", () => {
   it("invokes the transaction sender", async () => {
-    const transactionSenderStub = sinon.stubInterface<TransactionSender>();
+    const walletServiceStub = sinon.stubInterface<WalletService>();
     const contractAddr = await new ContractDeployer().deployContract(
       {
         deployer: randomAddress("owner"),
@@ -20,9 +20,11 @@ describe("Contract Deployer", () => {
         code: new Cell(),
         data: new Cell(),
       },
-      transactionSenderStub
+      Adapters.TON_HUB,
+      "NULL",
+      walletServiceStub
     );
-    expect(transactionSenderStub.sendTransaction).to.have.been.calledOnce;
+    expect(walletServiceStub.requestTransaction).to.have.been.calledOnce;
     expect(contractAddr.toFriendly()).to.equal("EQCtMet2LmiPwbohV11DWbD5xIc4r2U-FmojMwC9xrKa6fCK");
   });
 });

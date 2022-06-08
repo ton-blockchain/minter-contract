@@ -1,6 +1,6 @@
 import BN from "bn.js";
 import { Address, Cell, contractAddress, StateInit } from "ton";
-import { walletService } from "./wallets";
+import { WalletService } from "./wallets";
 import { Adapters } from "./wallets/types";
 
 interface ContractDeployDetails {
@@ -21,7 +21,12 @@ export class ContractDeployer {
     });
   }
 
-  async deployContract(params: ContractDeployDetails, adapterId: Adapters, session: any): Promise<Address> {
+  async deployContract(
+    params: ContractDeployDetails,
+    adapterId: Adapters,
+    session: any,
+    walletService: WalletService
+  ): Promise<Address> {
     const _contractAddress = this.addressForContract(params);
 
     if (!params.dryRun) {
@@ -36,4 +41,3 @@ export class ContractDeployer {
     return _contractAddress;
   }
 }
-
