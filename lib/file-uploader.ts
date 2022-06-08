@@ -11,11 +11,15 @@ export class IPFSWebUploader implements FileUploader {
 
     // TODO does it get pinned?
     // TODO do we trust this to stay
-    const { data: respData } = await axios.post("https://ipfs.infura.io:5001/api/v0/add", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const { data: respData } = await axios.post(
+      "https://ipfs.infura.io:5001/api/v0/add",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
 
     // TODO do we trust this to stay #2
     return `https://ipfs.io/ipfs/${respData.Hash}`;

@@ -13,10 +13,17 @@ interface ContractDeployDetails {
 
 export class ContractDeployer {
   addressForContract(params: ContractDeployDetails) {
-    return contractAddress({ workchain: 0, initialData: params.data, initialCode: params.code });
+    return contractAddress({
+      workchain: 0,
+      initialData: params.data,
+      initialCode: params.code,
+    });
   }
 
-  async deployContract(params: ContractDeployDetails, transactionSender: TransactionSender): Promise<Address> {
+  async deployContract(
+    params: ContractDeployDetails,
+    transactionSender: TransactionSender
+  ): Promise<Address> {
     const _contractAddress = this.addressForContract(params);
 
     if (!params.dryRun) {

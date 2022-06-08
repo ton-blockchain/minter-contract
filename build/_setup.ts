@@ -20,11 +20,17 @@ if (fs.existsSync("/app/.glitchdotcom.json")) {
   // make sure we're installed once
   if (!fs.existsSync("/app/bin")) {
     child_process.execSync(`mkdir bin`);
-    child_process.execSync(`wget https://github.com/ton-defi-org/ton-binaries/releases/download/ubuntu-16/fift -P ./bin`);
+    child_process.execSync(
+      `wget https://github.com/ton-defi-org/ton-binaries/releases/download/ubuntu-16/fift -P ./bin`
+    );
     child_process.execSync(`chmod +x ./bin/fift`);
-    child_process.execSync(`wget https://github.com/ton-defi-org/ton-binaries/releases/download/ubuntu-16/func -P ./bin`);
+    child_process.execSync(
+      `wget https://github.com/ton-defi-org/ton-binaries/releases/download/ubuntu-16/func -P ./bin`
+    );
     child_process.execSync(`chmod +x ./bin/func`);
-    child_process.execSync(`wget https://github.com/ton-defi-org/ton-binaries/releases/download/fiftlib/fiftlib.zip -P ./bin`);
+    child_process.execSync(
+      `wget https://github.com/ton-defi-org/ton-binaries/releases/download/fiftlib/fiftlib.zip -P ./bin`
+    );
     child_process.execSync(`unzip ./bin/fiftlib.zip -d ./bin/fiftlib`);
   }
 }

@@ -11,7 +11,11 @@ export class JettonMinter extends WrappedSmartContract {
       // TODO(sy) ['tvm.Slice', cellBoc] => also a less desired API (tonclient)
       {
         type: "cell_slice",
-        value: beginCell().storeAddress(forTonWalletAddress).endCell().toBoc({ idx: false }).toString("base64"),
+        value: beginCell()
+          .storeAddress(forTonWalletAddress)
+          .endCell()
+          .toBoc({ idx: false })
+          .toString("base64"),
       },
     ]);
 
