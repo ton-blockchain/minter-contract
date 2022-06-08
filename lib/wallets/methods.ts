@@ -1,5 +1,7 @@
 import { Adapters, Wallet } from "./types";
-import { walletService } from "./WalletService";
+import { WalletService } from "./WalletService";
+
+const walletService = new WalletService();
 
 const createWalletSession = async (
   adapterId: Adapters,
