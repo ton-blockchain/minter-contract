@@ -6,7 +6,6 @@ import { ContractDeployer } from "./contract-deployer";
 // TODO temporary
 import axios from "axios";
 import axiosThrottle from "axios-request-throttle";
-import { FileUploader } from "./file-uploader";
 import { parseGetMethodCall, waitForContractDeploy } from "./utils";
 import {
   initData,
@@ -48,12 +47,11 @@ export class JettonDeployController {
     this.#client = client;
   }
 
-  // TODO remove deployer + change jettonIconImageData to jettonIconURI
+  // TODO change jettonIconImageData to jettonIconURI
   async createJetton(
     params: JettonDeployParams,
     contractDeployer: ContractDeployer,
-    transactionSender: TransactionSender,
-    fileUploader: FileUploader
+    transactionSender: TransactionSender
   ) {
     params.onProgress?.(JettonDeployState.BALANCE_CHECK);
     const balance = await this.#client.getBalance(params.owner);
