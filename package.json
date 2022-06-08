@@ -9,9 +9,9 @@
     "test": "mocha  --exit test/**/*.spec.ts",
     "test:coverage": "nyc mocha --exit test/**/*.spec.ts",
     "test:watch": "mocha --watch --watch-files test/**/*.ts,lib/**/*.ts,contracts/**/*.ts test/**/*.spec.ts",
-    "buildcontracts": "ts-node ./build/_build.ts",
-    "deploycontracts": "ts-node ./build/_deploy.ts",
-    "builddist": "ncc build index.ts --target=es5",
+    "build": "ts-node ./build/_build.ts",
+    "deploy": "ts-node ./build/_deploy.ts",
+    "dist": "ncc build index.ts --target=es5",
     "deploy:testnet": "ts-node ./build/_deploy.ts",
     "_postinstall": "ts-node ./build/_setup.ts"
   },
