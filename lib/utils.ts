@@ -22,7 +22,7 @@ export async function waitForSeqno(wallet: Wallet) {
 
 export async function waitForContractDeploy(address: Address, client: TonClient) {
   let isDeployed = false;
-  let maxTries = 10;
+  let maxTries = 25;
   while (!isDeployed && maxTries > 0) {
     maxTries--;
     isDeployed = await client.isContractDeployed(address);
