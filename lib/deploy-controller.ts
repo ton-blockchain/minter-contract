@@ -47,7 +47,7 @@ export class JettonDeployController {
     this.#client = client;
   }
 
-  // TODO remove deployer + change jettonIconImageData to jettonIconURI
+  // TODO change jettonIconImageData to jettonIconURI
   async createJetton(
     params: JettonDeployParams,
     contractDeployer: ContractDeployer,
