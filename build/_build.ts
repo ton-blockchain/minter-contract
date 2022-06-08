@@ -27,7 +27,9 @@ async function main() {
   let funcVersion = "";
   try {
     funcVersion = child_process.execSync("func -V").toString();
-  } catch (e) {/*ignore*/}
+  } catch (e) {
+    /*ignore*/
+  }
   if (!funcVersion.includes("Func build information")) {
     console.log("\nFATAL ERROR: 'func' executable is not found, is it installed and in path?");
     process.exit(1);
@@ -87,15 +89,26 @@ async function main() {
         const crc = crc32(tlbOpMessage);
         const asQuery = `0x${(crc & 0x7fffffff).toString(16)}`;
         const asResponse = `0x${((crc | 0x80000000) >>> 0).toString(16)}`;
-        console.log(`   op '${tlbOpMessage.split(" ")[0]}': '${asQuery}' as query (&0x7fffffff), '${asResponse}' as response (|0x80000000)`);
+        console.log(
+          `   op '${
+            tlbOpMessage.split(" ")[0]
+          }': '${asQuery}' as query (&0x7fffffff), '${asResponse}' as response (|0x80000000)`
+        );
       }
     } else {
-      console.log(` - Warning: TL-B file for contract '${tlbFile}' not found, are your op consts according to standard?`);
+      console.log(
+        ` - Warning: TL-B file for contract '${tlbFile}' not found, are your op consts according to standard?`
+      );
     }
 
     // create a merged fc file with source code from all dependencies
     let sourceToCompile = "";
-    const importFiles = glob.sync(["contracts/imports/*.fc", "contracts/imports/*.func", `contracts/imports/${contractName}/*.fc`, `contracts/imports/${contractName}/*.func`]);
+    const importFiles = glob.sync([
+      "contracts/imports/*.fc",
+      "contracts/imports/*.func",
+      `contracts/imports/${contractName}/*.fc`,
+      `contracts/imports/${contractName}/*.func`,
+    ]);
     for (const importFile of importFiles) {
       console.log(` - Adding import '${importFile}'`);
       sourceToCompile += `${fs.readFileSync(importFile).toString()}\n`;
@@ -107,7 +120,11 @@ async function main() {
 
     // run the func compiler to create a fif file
     console.log(` - Trying to compile '${mergedFuncArtifact}' with 'func' compiler..`);
-    const buildErrors = child_process.execSync(`func -APS -o build/${contractName}.fif ${mergedFuncArtifact} 2>&1 1>node_modules/.tmpfunc`).toString();
+    const buildErrors = child_process
+      .execSync(
+        `func -APS -o build/${contractName}.fif ${mergedFuncArtifact} 2>&1 1>node_modules/.tmpfunc`
+      )
+      .toString();
     if (buildErrors.length > 0) {
       console.log(" - OH NO! Compilation Errors! The compiler output was:");
       console.log(`\n${buildErrors}`);
@@ -125,7 +142,7 @@ async function main() {
     }
 
     // create a temp cell.fif that will generate the cell
-    let fiftCellSource = "\"Asm.fif\" include\n";
+    let fiftCellSource = '"Asm.fif" include\n';
     fiftCellSource += `${fs.readFileSync(fiftArtifact).toString()}\n`;
     fiftCellSource += `boc>B "${cellArtifact}" B>file`;
     fs.writeFileSync(fiftCellArtifact, fiftCellSource);
@@ -147,7 +164,12 @@ async function main() {
       fs.unlinkSync(fiftCellArtifact);
     }
 
-    fs.writeFileSync(hexArtifact, JSON.stringify({hex: Cell.fromBoc(fs.readFileSync(cellArtifact))[0].toBoc().toString("hex")}));
+    fs.writeFileSync(
+      hexArtifact,
+      JSON.stringify({
+        hex: Cell.fromBoc(fs.readFileSync(cellArtifact))[0].toBoc().toString("hex"),
+      })
+    );
 
     // make sure hex artifact was created
     if (!fs.existsSync(hexArtifact)) {

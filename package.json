@@ -43,7 +43,7 @@
     "typescript": "^4.5.4"
   },
   "prettier": {
-    "printWidth": 180
+    "printWidth": 100
   },
   "mocha": {
     "require": [

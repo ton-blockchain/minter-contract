@@ -1,5 +1,16 @@
 import BN from "bn.js";
-import { Address, Cell, CellMessage, CommonMessageInfo, InternalMessage, SendMode, StateInit, TonClient, WalletContract, WalletV3R1Source } from "ton";
+import {
+  Address,
+  Cell,
+  CellMessage,
+  CommonMessageInfo,
+  InternalMessage,
+  SendMode,
+  StateInit,
+  TonClient,
+  WalletContract,
+  WalletV3R1Source,
+} from "ton";
 import { mnemonicToWalletKey } from "ton-crypto";
 
 export interface TransactionDetails {
@@ -122,7 +133,9 @@ export class TonDeepLinkTransactionSender implements TransactionSender {
     transactionDetails.stateInit.writeTo(INIT_CELL);
     const b64InitCell = this.#encodeBase64URL(INIT_CELL.toBoc());
 
-    let link = `${this.#deepLinkPrefix}://transfer/${transactionDetails.to.toFriendly()}?amount=${transactionDetails.value}&init=${b64InitCell}`;
+    let link = `${this.#deepLinkPrefix}://transfer/${transactionDetails.to.toFriendly()}?amount=${
+      transactionDetails.value
+    }&init=${b64InitCell}`;
 
     if (transactionDetails.message) {
       const b64MsgCell = this.#encodeBase64URL(transactionDetails.message.toBoc());

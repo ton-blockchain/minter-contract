@@ -5,14 +5,14 @@ import { parseOnChainData, JettonMetaDataKeys } from "./contracts/jetton-minter"
 interface JettonDetails {
   totalSupply: BN;
   address: Address;
-  metadata: { [s in JettonMetaDataKeys]?: string }
+  metadata: { [s in JettonMetaDataKeys]?: string };
 }
 
 export function parseJettonDetails(execResult: { result: any[] }): JettonDetails {
   return {
     totalSupply: execResult.result[0] as BN,
     address: (execResult.result[2] as Slice).readAddress() as Address,
-    metadata: parseOnChainData(execResult.result[3])
+    metadata: parseOnChainData(execResult.result[3]),
   };
 }
 
