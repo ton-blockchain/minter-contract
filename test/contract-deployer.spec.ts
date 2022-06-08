@@ -1,12 +1,11 @@
 import { ContractDeployer } from "../lib/contract-deployer";
-import { Address, Cell, toNano } from "ton";
+import { Cell, toNano } from "ton";
 import { randomAddress } from "./helpers";
 import chai, { expect } from "chai";
 import * as sinon from "ts-sinon";
 import sinonChai from "sinon-chai";
-import { createWalletSession } from "../lib/wallets";
 import { Adapters } from "../lib/wallets/types";
-import { WalletService, walletService } from "../lib/wallets/WalletService";
+import { WalletService } from "../lib/wallets/WalletService";
 
 chai.use(sinonChai);
 

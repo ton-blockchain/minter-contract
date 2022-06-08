@@ -1,4 +1,79 @@
-# TON Starter Template - Contracts
+# Jetton deployer
+> A library for deploying [Jettons](https://github.com/ton-blockchain/TIPs/issues/74) on the [Ton blockchain](https://ton.org/)
+
+## How to use
+
+1. Instantiate a `JettonDeployController`
+   
+```
+import {
+  JettonDeployState,
+  JettonDeployController,
+  EnvProfiles,
+  Environments,
+  ContractDeployer,
+  WalletService,
+} from "jetton-deployer-contracts";
+
+const dep = new JettonDeployController(
+  new TonClient({
+    endpoint: EnvProfiles[Environments.MAINNET].rpcApi,
+  })
+);
+```
+
+2. Connect an adapter
+
+The adapter is responsible for sending the transcations necessary for creating the jetton contract.
+
+Current supported adapters are:
+
+*  Tonhub (via [ton-x](https://github.com/ton-foundation/ton-x) connector)
+*  Ton wallet chrome extension
+
+ However, further adapters can be added (PRs are welcome), for instance a mnemonic-based adapter (useful for CLI applications) which uses ton client directly
+
+Example:
+```
+import { adapters, createWalletSession } from "jetton-deployer-contracts";
+import { Adapters } from "jetton-deployer-contracts/dist/lib/wallets/types";
+
+const session = await createWalletSession(
+  Adapters.TON_HUB,
+  "your app name",
+  onWalletConnect: w => {}
+);
+```
+
+3. Create the jetton
+
+```
+await dep.createJetton(
+  {
+    owner: ... // Wallet address of owner, 
+    onProgress: (depState, err, extra) => {},
+    jettonName: jettonParams.name, 
+    jettonSymbol: jettonParams.symbol, 
+    amountToMint: toNano(jettonParams.mintAmount),
+  },
+  new ContractDeployer(),
+  Adapters.TON_HUB, 
+  session,
+  new WalletService()
+);
+```
+
+## Building from source
+
+## Modifying contract
+
+## Running on web
+
+## Roadmap
+
+
+
+
 
 > Starter template for a new TON project - FunC contracts, JS tests, compilation and deployment scripts
 

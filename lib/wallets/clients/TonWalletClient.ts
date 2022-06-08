@@ -53,6 +53,9 @@ export class TonWalletClient {
   }
 }
 
-global["window"] = global["window"] ?? null;
+if (!global["window"]) {
+  // @ts-ignore
+  global["window"] = null;
+}
 
 export const tonWalletClient = new TonWalletClient(window);
