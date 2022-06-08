@@ -11,8 +11,10 @@ import {
   mintBody,
   JETTON_MINTER_CODE,
   parseOnChainData,
+  JettonMetaDataKeys,
 } from "../contracts/jetton-minter";
 import { Adapters } from "./wallets/types";
+import { WalletService } from "./wallets";
 axiosThrottle.use(axios, { requestsPerSecond: 0.9 }); // required since toncenter jsonRPC limits to 1 req/sec without API key
 
 export const JETTON_DEPLOY_GAS = toNano(0.25);
@@ -50,16 +52,18 @@ export class JettonDeployController {
     params: JettonDeployParams,
     contractDeployer: ContractDeployer,
     adapterId: Adapters,
-    session: any
+    session: any,
+    walletService: WalletService
   ): Promise<Address> {
     params.onProgress?.(JettonDeployState.BALANCE_CHECK);
     const balance = await this.#client.getBalance(params.owner);
     if (balance.lt(JETTON_DEPLOY_GAS)) throw new Error("Not enough balance in deployer wallet");
 
-    const metadata = {
+    const metadata: { [s in JettonMetaDataKeys]?: string } = {
       name: params.jettonName,
       symbol: params.jettonSymbol,
       description: params.jettonDescripton,
+      image: params.imageUri
     };
 
     const deployParams = {
@@ -75,7 +79,7 @@ export class JettonDeployController {
     if (await this.#client.isContractDeployed(contractAddr)) {
       params.onProgress?.(JettonDeployState.ALREADY_DEPLOYED);
     } else {
-      await contractDeployer.deployContract(deployParams, adapterId, session);
+      await contractDeployer.deployContract(deployParams, adapterId, session, walletService);
       params.onProgress?.(JettonDeployState.AWAITING_MINTER_DEPLOY);
       await waitForContractDeploy(contractAddr, this.#client);
     }
