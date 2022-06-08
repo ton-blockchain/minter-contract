@@ -53,6 +53,5 @@ export class TonWalletClient {
   }
 }
 
-global["window"] = global["window"] ?? null;
 
 export const tonWalletClient = new TonWalletClient(window);

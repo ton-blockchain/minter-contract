@@ -8,7 +8,7 @@ const TONHUB_TIMEOUT = 5 * 60 * 1000;
 
 export class TonhubWalletAdapter implements WalletAdapter<TonhubCreatedSession> {
   tonhubConnector = new TonhubConnector();
-  constructor(testnet: boolean) {
+  constructor(testnet?: boolean) {
     this.tonhubConnector = new TonhubConnector({ testnet });
   }
 
