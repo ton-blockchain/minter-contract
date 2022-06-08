@@ -98,7 +98,7 @@ export function parseOnChainData(contentCell: Cell): {
   return res;
 }
 
-export function initData(owner: Address, data: { [s: string]: string | undefined }) {
+export function initData(owner: Address, data: { [s in JettonMetaDataKeys]?: string | undefined }) {
   return beginCell()
     .storeCoins(0)
     .storeAddress(owner)

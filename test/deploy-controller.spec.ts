@@ -5,7 +5,7 @@ import { TransactionSender } from "../lib/transaction-sender";
 import chai, { expect } from "chai";
 import * as sinon from "ts-sinon";
 import sinonChai from "sinon-chai";
-import { JettonDeployController, JETTON_DEPLOY_GAS } from "../lib/deploy-controller";
+import { JettonDeployController, JettonDeployParams, JETTON_DEPLOY_GAS } from "../lib/deploy-controller";
 import BN from "bn.js";
 import chaiAsPromised from "chai-as-promised";
 import { buildOnChainData } from "../contracts/jetton-minter";
@@ -46,13 +46,12 @@ describe("Deploy Controller", () => {
     });
   }
 
-  const deployPayload = {
+  const deployPayload: JettonDeployParams = {
     amountToMint: toNano(0),
     jettonName: "",
     jettonSymbol: "",
     owner: randomAddress("owner"),
-    mintToOwner: false,
-    jettonIconImageData: Buffer.from(""),
+    imageUri: "",
     onProgress: () => {
       /* do nothing */
     },
@@ -75,22 +74,24 @@ describe("Deploy Controller", () => {
       .resolves(true)
       .onThirdCall()
       .resolves(true);
+
     tonClient.getBalance.resolves(toNano(1));
+
     stubTonClientGet(tonClient, {
       get_jetton_data: [new BN(0), new BN(0), addressToCell(randomAddress("owner"))],
       get_wallet_address: [addressToCell(randomAddress("jwalletaddr"))],
       get_wallet_data: [new BN(0)],
     });
 
-    await expect(
-      deployController.createJetton(
-        deployPayload,
-        contractDeployer,
-        Adapters.TON_HUB,
-        "",
-        walletServiceStub
-      )
-    ).to.be.fulfilled;
+    const contractAddr = await deployController.createJetton(
+      deployPayload,
+      contractDeployer,
+      Adapters.TON_HUB,
+      "",
+      walletServiceStub
+    );
+
+    expect(contractAddr.toFriendly()).to.equal("EQCFjhVMFTPLZFfd6iPNh7-eZ_kZH_CPnsHua1J6dI_nSYmC");
     expect(contractDeployer.deployContract).to.have.been.calledOnce;
   });
 
