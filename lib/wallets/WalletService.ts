@@ -5,8 +5,6 @@ import { TonChromeExtensionWalletAdapter, TonhubWalletAdapter } from "./adapters
 
 import { WalletAdapter, Wallet, Adapters } from "./types";
 
-const IS_TESTNET = false;
-
 export class WalletService {
   private readonly adapters: Map<string, WalletAdapter<any>> = new Map();
 
@@ -16,7 +14,7 @@ export class WalletService {
     this.adapters.set(adapterId, adapter);
   }
 
-  constructor() {
+  constructor(IS_TESTNET?: boolean) {
     this.registerAdapter(Adapters.TON_WALLET, new TonChromeExtensionWalletAdapter());
     this.registerAdapter(Adapters.TON_HUB, new TonhubWalletAdapter(IS_TESTNET));
   }
@@ -47,5 +45,4 @@ export class WalletService {
     return adapter.requestTransaction(session, request, onSuccess);
   }
 }
-
 export default WalletService;

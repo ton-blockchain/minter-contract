@@ -54,6 +54,7 @@ export class TonWalletClient {
 }
 
 if (!global["window"]) {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   global["window"] = null;
 }
