@@ -8,7 +8,7 @@ import axios from "axios";
 import axiosThrottle from "axios-request-throttle";
 import { FileUploader } from "./file-uploader";
 import { parseGetMethodCall, waitForContractDeploy } from "./utils";
-import { initData, mintBody, JETTON_MINTER_CODE } from "../contracts/jetton-minter";
+import { initData, mintBody, JETTON_MINTER_CODE, parseOnChainData } from "../contracts/jetton-minter";
 axiosThrottle.use(axios, { requestsPerSecond: 0.9 }); // required since toncenter jsonRPC limits to 1 req/sec without API key
 
 export const JETTON_DEPLOY_GAS = toNano(0.25);
@@ -43,24 +43,23 @@ export class JettonDeployController {
     this.#client = client;
   }
 
+  
+  // TODO remove deployer + change jettonIconImageData to jettonIconURI
   async createJetton(params: JettonDeployParams, contractDeployer: ContractDeployer, transactionSender: TransactionSender, fileUploader: FileUploader) {
     params.onProgress?.(JettonDeployState.BALANCE_CHECK);
     const balance = await this.#client.getBalance(params.owner);
     if (balance.lt(JETTON_DEPLOY_GAS)) throw new Error("Not enough balance in deployer wallet");
 
-    const ipfsImageLink = await fileUploader.upload(params.jettonIconImageData);
-    const ipfsJsonLink = await fileUploader.upload(
-      JSON.stringify({
-        name: params.jettonName,
-        symbol: params.jettonSymbol,
-        description: params.jettonDescripton,
-        image: ipfsImageLink,
-      })
-    );
+    const metadata = {
+      name: params.jettonName,
+      symbol: params.jettonSymbol,
+      description: params.jettonDescripton,
+      // TODO image: ipfsImageLink,
+    };
 
     const deployParams = {
       code: JETTON_MINTER_CODE,
-      data: initData(params.owner, ipfsJsonLink),
+      data: initData(params.owner, metadata),
       deployer: params.owner,
       value: JETTON_DEPLOY_GAS,
       message: mintBody(params.owner, params.amountToMint),
@@ -102,10 +101,8 @@ export class JettonDeployController {
   async getJettonDetails(contractAddr: Address, owner: Address) {
     const jettonDataRes = await this.#client.callGetMethod(contractAddr, "get_jetton_data");
 
-    const contentCell = (parseGetMethodCall(jettonDataRes.stack)[3] as Cell).beginParse();
-    contentCell.readInt(8);
-    const jsonURI = contentCell.readRemainingBytes().toString("ascii");
-    const jsonData = (await axios.get(jsonURI)).data;
+    const contentCell = (parseGetMethodCall(jettonDataRes.stack)[3] as Cell);
+    const dict = parseOnChainData(contentCell);
 
     const jwalletAdressRes = await this.#client.callGetMethod(contractAddr, "get_wallet_address", [
       ["tvm.Slice", beginCell().storeAddress(owner).endCell().toBoc({ idx: false }).toString("base64")],
@@ -116,7 +113,7 @@ export class JettonDeployController {
     const jwalletDataRes = await this.#client.callGetMethod(ownerJWalletAddr, "get_wallet_data");
 
     return {
-      jetton: { ...jsonData, contractAddress: contractAddr.toFriendly() },
+      jetton: { ...dict, contractAddress: contractAddr.toFriendly() },
       wallet: {
         jettonAmount: (parseGetMethodCall(jwalletDataRes.stack)[0] as BN).toString(),
         ownerJWallet: ownerJWalletAddr.toFriendly(),

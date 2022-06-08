@@ -1,14 +1,14 @@
 {
-  "name": "tonstarter-contracts",
-  "description": "",
-  "version": "0.0.0",
+  "name": "jetton-deployer-contracts",
+  "description": "Javascript library for deploying Jettons on the TON blockchain",
+  "version": "0.0.1",
   "license": "MIT",
-  "author": "",
+  "author": "ton-defi.org",
   "scripts": {
     "prettier": "npx prettier --write '{test,contracts,build}/**/*.{ts,js,json}'",
     "test": "mocha  --exit test/**/*.spec.ts",
     "test:coverage": "nyc mocha --exit test/**/*.spec.ts",
-    "test:watch": "mocha --watch --watch-files test/**/*.ts,lib/**/*.ts test/**/*.spec.ts",
+    "test:watch": "mocha --watch --watch-files test/**/*.ts,lib/**/*.ts,contracts/**/*.ts test/**/*.spec.ts",
     "build": "ts-node ./build/_build.ts",
     "deploy": "ts-node ./build/_deploy.ts",
     "deploy:testnet": "ts-node ./build/_deploy.ts",
@@ -56,6 +56,7 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
+    "@aws-crypto/sha256-js": "^2.0.1",
     "commander": "^9.3.0"
   }
 }

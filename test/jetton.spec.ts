@@ -3,14 +3,11 @@ import chaiBN from "chai-bn";
 import BN from "bn.js";
 chai.use(chaiBN(BN));
 
-import * as fs from "fs";
-import { Address, beginCell, Cell, InternalMessage, Slice, toNano, contractAddress, CommonMessageInfo, CellMessage } from "ton";
-import { OutAction, SmartContract } from "ton-contract-executor";
+import { Address, toNano } from "ton";
 import * as jetton_minter from "../contracts/jetton-minter";
 import * as jetton_wallet from "../contracts/jetton-wallet";
 import { internalMessage, randomAddress } from "./helpers";
-import { getWalletAddress, parseJettonDetails, parseJettonWalletDetails } from "../jetton-utils";
-import { WrappedSmartContract } from "./lib/contract-deployer";
+import { parseJettonDetails, parseJettonWalletDetails } from "../jetton-utils";
 import { JettonMinter } from "./lib/jetton-minter";
 import { actionToMessage } from "./lib/utils";
 import { JettonWallet } from "./lib/jetton-wallet";
@@ -35,17 +32,18 @@ describe("Jetton", () => {
     );
 
   beforeEach(async () => {
-    const dataCell = jetton_minter.initData(OWNER_ADDRESS,"https://api.jsonbin.io/b/628ced3405f31f68b3a53622");
+    const dataCell = jetton_minter.initData(OWNER_ADDRESS, {name: "MY_JETTON", symbol: "MJT"});
     minterContract = (await JettonMinter.create(JETTON_MINTER_CODE, dataCell)) as JettonMinter; // TODO: 🤮;
   });
 
   it("should get minter initialization data correctly", async () => {
     const call = await minterContract.contract.invokeGetMethod("get_jetton_data", []);
-    const { totalSupply, address, contentUri } = parseJettonDetails(call);
+    const { totalSupply, address, metadata } = parseJettonDetails(call); 
 
     expect(totalSupply).to.be.bignumber.equal(new BN(0));
     expect(address.toFriendly()).to.equal(OWNER_ADDRESS.toFriendly());
-    expect(contentUri).to.equal("https://api.jsonbin.io/b/628ced3405f31f68b3a53622");
+    expect(metadata.name).to.equal("MY_JETTON");
+    expect(metadata.symbol).to.equal("MJT");
   });
 
   it("offchain and onchain jwallet should return the same address", async () => {
