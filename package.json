@@ -1,7 +1,7 @@
 {
   "name": "jetton-deployer-contracts",
   "description": "Javascript library for deploying Jettons on the TON blockchain",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "MIT",
   "author": "ton-defi.org",
   "scripts": {

@@ -42,6 +42,7 @@ export interface TonWalletProvider {
 }
 
 export enum Adapters {
+  TON_CLIENT = "ton-client",
   TON_HUB = "tonhub",
   TON_WALLET = "ton-wallet",
 }

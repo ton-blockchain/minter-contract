@@ -11,6 +11,11 @@ const adapters: Adapter[] = [
     type: Adapters.TON_WALLET,
     mobileCompatible: false,
   },
+  {
+    text: "Ton JS Client",
+    type: Adapters.TON_CLIENT,
+    mobileCompatible: false,
+  },
 ];
 
 const TON_WALLET_EXTENSION_URL =
