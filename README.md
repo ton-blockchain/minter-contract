@@ -8,46 +8,37 @@
 1. Instantiate a `JettonDeployController`
    
 ```
-import {
-  JettonDeployState,
-  JettonDeployController,
-  EnvProfiles,
-  Environments,
-  ContractDeployer,
-  WalletService,
-} from "jetton-deployer-contracts";
-
-const dep = new JettonDeployController(
-  new TonClient({
-    endpoint: EnvProfiles[Environments.MAINNET].rpcApi,
-  })
-);
+const dep = new JettonDeployController();
 ```
 
-2. Connect an adapter
+2. Connect a wallet provider
 
-The adapter is responsible for sending the transcations necessary for creating the jetton contract.
+The provider is responsible for sending the transcations necessary for creating the jetton contract.
 
-Current supported adapters are:
+Current supported wallet providers are:
 
 *  Tonhub (via [ton-x](https://github.com/ton-foundation/ton-x) connector)
 *  Ton wallet chrome extension
+*  Mnemonic-based provider
 
- However, further adapters can be added (PRs are welcome), for instance a mnemonic-based adapter (useful for CLI applications) which uses ton client directly
+ Further providers can be added (PRs are welcome).
 
 Example:
 ```
-import { adapters, createWalletSession } from "jetton-deployer-contracts";
-import { Adapters } from "jetton-deployer-contracts/dist/lib/wallets/types";
-
-const session = await createWalletSession(
-  Adapters.TON_HUB,
-  "your app name",
-  onWalletConnect: w => {}
+const tonHubCon = new TonConnection(
+  new TonhubProvider({
+    isSandbox: true,
+    onSessionLinkReady: (session) => {
+      // For example, display `session.link` as a QR code for the mobile tonhub wallet to scan
+    },
+    persistenceProvider: localStorage, // If you want the persist the session
+  }),
+  EnvProfiles[Environments.SANDBOX].rpcApi
 );
+const wallet = await tonHubCon.connect(); // Get wallet details
 ```
 
-3. Create the jetton
+1. Create the jetton
 
 ```
 const contractAddress = await dep.createJetton(
@@ -58,10 +49,7 @@ const contractAddress = await dep.createJetton(
     jettonSymbol: jettonParams.symbol, 
     amountToMint: toNano(jettonParams.mintAmount),
   },
-  new ContractDeployer(),
-  Adapters.TON_HUB, 
-  session,
-  new WalletService()
+  tonHubCon
 );
 ```
 

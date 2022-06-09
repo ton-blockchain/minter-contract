@@ -8,16 +8,15 @@ export function delay(ms: number) {
 
 // TODO: refactor this redundant class
 
-import {  Wallet } from "../types";
+import { Wallet } from "../types";
 const TON_WALLET_EXTENSION_URL =
   "https://chrome.google.com/webstore/detail/ton-wallet/nphplpgoakhhjchkkhmiggakijnkhfnd";
 
-  export interface TonWalletProvider2 {
-    isTonWallet: boolean;
-    send(method: string, params?: any[]): Promise<any>;
-    on(eventName: string, handler: (...data: any[]) => any): void;
-  }
-  
+export interface TonWalletProvider2 {
+  isTonWallet: boolean;
+  send(method: string, params?: any[]): Promise<any>;
+  on(eventName: string, handler: (...data: any[]) => any): void;
+}
 
 declare global {
   interface Window {
