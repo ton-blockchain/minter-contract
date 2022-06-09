@@ -26,6 +26,7 @@
     "@types/chai": "^4.3.0",
     "@types/chai-as-promised": "^7.1.5",
     "@types/mocha": "^9.1.1",
+    "@types/node": "^17.0.41",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
     "@typescript-eslint/parser": "^5.27.0",
     "@vercel/ncc": "^0.34.0",
@@ -59,11 +60,11 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
-    "dotenv": "^16.0.0",
+    "@aws-crypto/sha256-js": "^2.0.1",
     "axios-request-throttle": "^1.0.0",
-    "ton-x": "^0.6.0",
-    "ton-crypto": "^3.1.0",
+    "dotenv": "^16.0.0",
     "ton": "^9.6.3",
-    "@aws-crypto/sha256-js": "^2.0.1"
+    "ton-crypto": "^3.1.0",
+    "ton-x": "^0.6.0"
   }
 }

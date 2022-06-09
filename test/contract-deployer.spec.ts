@@ -4,14 +4,13 @@ import { randomAddress } from "./helpers";
 import chai, { expect } from "chai";
 import * as sinon from "ts-sinon";
 import sinonChai from "sinon-chai";
-import { Adapters } from "../lib/wallets/types";
-import { WalletService } from "../lib/wallets/WalletService";
+import { TonConnection } from "../lib/ton-connection/ton-connection";
 
 chai.use(sinonChai);
 
 describe("Contract Deployer", () => {
   it("invokes the transaction sender", async () => {
-    const walletServiceStub = sinon.stubInterface<WalletService>();
+    const tonConnectionStub = sinon.stubInterface<TonConnection>();
     const contractAddr = await new ContractDeployer().deployContract(
       {
         deployer: randomAddress("owner"),
@@ -19,11 +18,9 @@ describe("Contract Deployer", () => {
         code: new Cell(),
         data: new Cell(),
       },
-      Adapters.TON_HUB,
-      "NULL",
-      walletServiceStub
+      tonConnectionStub
     );
-    expect(walletServiceStub.requestTransaction).to.have.been.calledOnce;
+    expect(tonConnectionStub.requestTransaction).to.have.been.calledOnce;
     expect(contractAddr.toFriendly()).to.equal("EQCtMet2LmiPwbohV11DWbD5xIc4r2U-FmojMwC9xrKa6fCK");
   });
 });

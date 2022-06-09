@@ -13,7 +13,7 @@
     "declaration": true
   },
   // "include": ["lib"],
-  "exclude": ["node_modules", "dist", "tonwallets", "test"],
+  "exclude": ["node_modules", "dist", "tonwallets"],
   "ts-node": {
     "transpileOnly": true,
     "transpiler": "ts-node/transpilers/swc"
