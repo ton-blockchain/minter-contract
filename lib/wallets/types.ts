@@ -23,8 +23,6 @@ export interface Wallet {
   walletVersion: string;
 }
 
-export interface WalletSession {}
-
 export interface WalletAdapter {
   isAvailable(): boolean;
   createSession(name: string): Promise<WalletSession>;
