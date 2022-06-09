@@ -6,16 +6,13 @@ import {
   TonConnection,
 } from "../index";
 import { Address } from "ton";
-import { MnemonicProvider } from "../lib/ton-connection/MnemonicProvider";
+import { MnemonicProvider } from "../lib/ton-connection/mnemonic-provider";
 
 const MNEMONIC = (process.env.MNEMONIC as string).split(" ");
 
 (async () => {
-  // const tonClient = new TonClient({ endpoint: EnvProfiles[Environments.SANDBOX].rpcApi });
-
   const rpcApi = EnvProfiles[Environments.SANDBOX].rpcApi;
   const dep = new JettonDeployController();
-
   const con = new TonConnection(new MnemonicProvider(MNEMONIC, rpcApi), rpcApi);
 
   const {address} = await con.connect();
@@ -25,7 +22,7 @@ const MNEMONIC = (process.env.MNEMONIC as string).split(" ");
   const addrr = await dep.createJetton(
     {
       amountToMint: new BN(100),
-      jettonName: "MyJetton2",
+      jettonName: "MyJetton",
       jettonSymbol: "MYJ",
       owner: Address.parse(address), //Address.parse("kQDBQnDNDtDoiX9np244sZmDcEyIYmMcH1RiIxh59SRpKZsb"),
       onProgress: console.log
