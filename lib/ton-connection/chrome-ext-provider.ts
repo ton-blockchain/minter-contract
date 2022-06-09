@@ -1,25 +1,34 @@
 import { Cell } from "ton";
 import { TransactionDetails } from "../transaction-sender";
-import { TonConnectionProvider } from "./ton-connection";
+import { TonWalletProvider } from "./ton-connection";
 
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-import { TonWalletProvider, Wallet } from "../types";
+// TODO: refactor this redundant class
+
+import {  Wallet } from "../types";
 const TON_WALLET_EXTENSION_URL =
   "https://chrome.google.com/webstore/detail/ton-wallet/nphplpgoakhhjchkkhmiggakijnkhfnd";
 
+  export interface TonWalletProvider2 {
+    isTonWallet: boolean;
+    send(method: string, params?: any[]): Promise<any>;
+    on(eventName: string, handler: (...data: any[]) => any): void;
+  }
+  
+
 declare global {
   interface Window {
-    ton?: TonWalletProvider;
+    ton?: TonWalletProvider2;
   }
 }
 
 class TonWalletClient {
   constructor(private readonly window: Window) {}
 
-  private get ton(): TonWalletProvider | undefined {
+  private get ton(): TonWalletProvider2 | undefined {
     return this.window.ton;
   }
 
@@ -71,7 +80,7 @@ if (!global["window"]) {
 
 export const tonWalletClient = new TonWalletClient(window);
 
-export class ChromeExtensionWalletProvider implements TonConnectionProvider {
+export class ChromeExtensionWalletProvider implements TonWalletProvider {
   async connect(): Promise<Wallet> {
     try {
       await tonWalletClient.ready();

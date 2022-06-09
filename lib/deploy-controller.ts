@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { Address, beginCell, Cell, toNano, TonClient } from "ton";
+import { Address, beginCell, Cell, toNano } from "ton";
 import { ContractDeployer } from "./contract-deployer";
 
 // TODO temporary
@@ -13,8 +13,7 @@ import {
   parseOnChainData,
   JettonMetaDataKeys,
 } from "../contracts/jetton-minter";
-import { Adapters, WalletAdapter_ } from "./wallets/types";
-import { WalletService } from "./wallets";
+import { TonConnection } from "./ton-connection/ton-connection";
 axiosThrottle.use(axios, { requestsPerSecond: 0.9 }); // required since toncenter jsonRPC limits to 1 req/sec without API key
 
 export const JETTON_DEPLOY_GAS = toNano(0.25);
@@ -42,19 +41,15 @@ export interface JettonDeployParams {
 }
 
 export class JettonDeployController {
-  _client: TonClient;
-
-  constructor(client: TonClient) {
-    this._client = client;
-  }
-
+  
   async createJetton(
     params: JettonDeployParams,
-    contractDeployer: ContractDeployer,
-    adapter: WalletAdapter_,
+    tonConnection: TonConnection,
   ): Promise<Address> {
+    const contractDeployer = new ContractDeployer();
+
     params.onProgress?.(JettonDeployState.BALANCE_CHECK);
-    const balance = await this._client.getBalance(params.owner);
+    const balance = await tonConnection._tonClient.getBalance(params.owner);
     if (balance.lt(JETTON_DEPLOY_GAS)) throw new Error("Not enough balance in deployer wallet");
 
     const metadata: { [s in JettonMetaDataKeys]?: string } = {
@@ -76,15 +71,15 @@ export class JettonDeployController {
 
     console.log("Jetton contract", contractAddr.toFriendly());
 
-    if (await this._client.isContractDeployed(contractAddr)) {
+    if (await tonConnection._tonClient.isContractDeployed(contractAddr)) {
       params.onProgress?.(JettonDeployState.ALREADY_DEPLOYED);
     } else {
-      await contractDeployer.deployContract(deployParams, adapter);
+      await contractDeployer.deployContract(deployParams, tonConnection);
       params.onProgress?.(JettonDeployState.AWAITING_MINTER_DEPLOY);
-      await waitForContractDeploy(contractAddr, this._client);
+      await waitForContractDeploy(contractAddr, tonConnection._tonClient);
     }
 
-    const jettonDataRes = await this._client.callGetMethod(contractAddr, "get_jetton_data");
+    const jettonDataRes = await tonConnection._tonClient.callGetMethod(contractAddr, "get_jetton_data");
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const deployedOwnerAddress = (parseGetMethodCall(jettonDataRes.stack)[2] as Cell)
@@ -94,7 +89,7 @@ export class JettonDeployController {
       throw new Error("Contract deployed incorrectly");
 
     // todo what's the deal with idx:false
-    const jwalletAddressRes = await this._client.callGetMethod(contractAddr, "get_wallet_address", [
+    const jwalletAddressRes = await tonConnection._tonClient.callGetMethod(contractAddr, "get_wallet_address", [
       [
         "tvm.Slice",
         beginCell().storeAddress(params.owner).endCell().toBoc({ idx: false }).toString("base64"),
@@ -108,11 +103,11 @@ export class JettonDeployController {
       console.log("Jetton wallet", ownerJWalletAddr.toFriendly());
 
     params.onProgress?.(JettonDeployState.AWAITING_JWALLET_DEPLOY);
-    await waitForContractDeploy(ownerJWalletAddr, this._client);
+    await waitForContractDeploy(ownerJWalletAddr, tonConnection._tonClient);
 
     params.onProgress?.(JettonDeployState.VERIFY_MINT, undefined, contractAddr.toFriendly()); // TODO better way of emitting the contract?
 
-    const jwalletDataRes = await this._client.callGetMethod(ownerJWalletAddr, "get_wallet_data");
+    const jwalletDataRes = await tonConnection._tonClient.callGetMethod(ownerJWalletAddr, "get_wallet_data");
     if (!(parseGetMethodCall(jwalletDataRes.stack)[0] as BN).eq(params.amountToMint))
       throw new Error("Mint fail");
     params.onProgress?.(JettonDeployState.DONE);
@@ -120,13 +115,13 @@ export class JettonDeployController {
     return contractAddr;
   }
 
-  async getJettonDetails(contractAddr: Address, owner: Address) {
-    const jettonDataRes = await this._client.callGetMethod(contractAddr, "get_jetton_data");
+  async getJettonDetails(contractAddr: Address, owner: Address, tonConnection: TonConnection) {
+    const jettonDataRes = await tonConnection._tonClient.callGetMethod(contractAddr, "get_jetton_data");
 
     const contentCell = parseGetMethodCall(jettonDataRes.stack)[3] as Cell;
     const dict = parseOnChainData(contentCell);
 
-    const jwalletAdressRes = await this._client.callGetMethod(contractAddr, "get_wallet_address", [
+    const jwalletAdressRes = await tonConnection._tonClient.callGetMethod(contractAddr, "get_wallet_address", [
       [
         "tvm.Slice",
         beginCell().storeAddress(owner).endCell().toBoc({ idx: false }).toString("base64"),
@@ -137,7 +132,7 @@ export class JettonDeployController {
       .beginParse()
       .readAddress()!;
 
-    const jwalletDataRes = await this._client.callGetMethod(ownerJWalletAddr, "get_wallet_data");
+    const jwalletDataRes = await tonConnection._tonClient.callGetMethod(ownerJWalletAddr, "get_wallet_data");
 
     return {
       jetton: { ...dict, contractAddress: contractAddr.toFriendly() },

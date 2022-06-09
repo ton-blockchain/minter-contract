@@ -2,14 +2,14 @@ import { Cell, CellMessage, CommonMessageInfo, InternalMessage, SendMode, TonCli
 import { mnemonicToWalletKey } from "ton-crypto";
 import { TransactionDetails } from "../transaction-sender";
 import { Wallet } from "../wallets/types";
-import { TonConnectionProvider } from "./ton-connection";
+import { TonWalletProvider } from "./ton-connection";
 
-export class MnemonicProvider implements TonConnectionProvider {
+export class MnemonicProvider implements TonWalletProvider {
   private _mnemonic: string[];
   private _tonClient: TonClient;
-  constructor(mnemonic: string[], tonClient: TonClient) {
+  constructor(mnemonic: string[], rpcApi: string) {
     this._mnemonic = mnemonic;
-    this._tonClient = tonClient;
+    this._tonClient = new TonClient({endpoint: rpcApi});
   }
   async requestTransaction(request: TransactionDetails, onSuccess?: () => void): Promise<void> {
     const wk = await mnemonicToWalletKey(this._mnemonic);

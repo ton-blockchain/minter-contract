@@ -1,18 +1,20 @@
 import { TransactionDetails } from "../transaction-sender";
 import { Wallet } from "../wallets/types";
-import { TonhubProvider } from "./TonhubProvider";
+import { TonClient } from "ton";
 
-export interface TonConnectionProvider {
+export interface TonWalletProvider {
   connect(): Promise<Wallet>;
   requestTransaction(request: TransactionDetails, onSuccess?: () => void): Promise<void>;
 }
 
 
 export class TonConnection {
-  private _provider: TonConnectionProvider;
+  private _provider: TonWalletProvider;
+  public _tonClient: TonClient; // Future - wrap functionality and make private
 
-  constructor(provider: TonConnectionProvider) {
+  constructor(provider: TonWalletProvider, rpcApi: string) {
     this._provider = provider;
+    this._tonClient = new TonClient({endpoint: rpcApi});
   }
 
   requestTransaction(request: TransactionDetails, onSuccess?: () => void): Promise<void> {

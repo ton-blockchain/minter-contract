@@ -1,25 +1,22 @@
 import BN from "bn.js";
 import {
-  JettonDeployState,
   JettonDeployController,
   EnvProfiles,
   Environments,
-  ContractDeployer,
-  WalletService,
   TonConnection,
 } from "../index";
-import { TonClient, Address } from "ton";
-import { AdapterTypes } from "../lib/wallets/AdapterFactory";
-import { Adapters } from "../lib/wallets/types";
+import { Address } from "ton";
 import { MnemonicProvider } from "../lib/ton-connection/MnemonicProvider";
 
 const MNEMONIC = (process.env.MNEMONIC as string).split(" ");
 
 (async () => {
-  const tonClient = new TonClient({ endpoint: EnvProfiles[Environments.SANDBOX].rpcApi });
-  const dep = new JettonDeployController(tonClient);
+  // const tonClient = new TonClient({ endpoint: EnvProfiles[Environments.SANDBOX].rpcApi });
 
-  const con = new TonConnection(new MnemonicProvider(MNEMONIC, tonClient));
+  const rpcApi = EnvProfiles[Environments.SANDBOX].rpcApi;
+  const dep = new JettonDeployController();
+
+  const con = new TonConnection(new MnemonicProvider(MNEMONIC, rpcApi), rpcApi);
 
   const {address} = await con.connect();
 
@@ -28,12 +25,11 @@ const MNEMONIC = (process.env.MNEMONIC as string).split(" ");
   const addrr = await dep.createJetton(
     {
       amountToMint: new BN(100),
-      jettonName: "MyJetton1",
+      jettonName: "MyJetton2",
       jettonSymbol: "MYJ",
       owner: Address.parse(address), //Address.parse("kQDBQnDNDtDoiX9np244sZmDcEyIYmMcH1RiIxh59SRpKZsb"),
       onProgress: console.log
     },
-    new ContractDeployer(),
     con
   );
 

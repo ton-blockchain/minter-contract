@@ -3,7 +3,7 @@ import { Cell, ConfigStore } from "ton";
 import { TonhubConnector, TonhubCreatedSession } from "ton-x";
 import { TransactionDetails } from "../transaction-sender";
 import { Wallet } from "../wallets/types";
-import { TonConnectionProvider } from "./ton-connection";
+import { TonWalletProvider } from "./ton-connection";
 
 export type TonHubProviderConfig = {
   isSandbox?: boolean | undefined;
@@ -17,7 +17,7 @@ export interface PersistenceProvider {
   removeItem(key: string): void;
 }
 
-export class TonhubProvider implements TonConnectionProvider {
+export class TonhubProvider implements TonWalletProvider {
   private TONHUB_TIMEOUT = 5 * 60 * 1000;
   private ITEM_KEY = "ton_hub_sess";
 
