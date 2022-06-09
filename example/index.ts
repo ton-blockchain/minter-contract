@@ -20,13 +20,17 @@ const MNEMONIC = (process.env.MNEMONIC as string).split(" ");
   const dep = new JettonDeployController(tonClient);
 
   const con = new TonConnection(new MnemonicProvider(MNEMONIC, tonClient));
+
+  const {address} = await con.connect();
+
+  console.log(address);
   
   const addrr = await dep.createJetton(
     {
       amountToMint: new BN(100),
-      jettonName: "MyJetton",
+      jettonName: "MyJetton1",
       jettonSymbol: "MYJ",
-      owner: Address.parse("kQDBQnDNDtDoiX9np244sZmDcEyIYmMcH1RiIxh59SRpKZsb"),
+      owner: Address.parse(address), //Address.parse("kQDBQnDNDtDoiX9np244sZmDcEyIYmMcH1RiIxh59SRpKZsb"),
       onProgress: console.log
     },
     new ContractDeployer(),

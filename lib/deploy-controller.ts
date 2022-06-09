@@ -74,6 +74,8 @@ export class JettonDeployController {
 
     const contractAddr = contractDeployer.addressForContract(deployParams);
 
+    console.log("Jetton contract", contractAddr.toFriendly());
+
     if (await this._client.isContractDeployed(contractAddr)) {
       params.onProgress?.(JettonDeployState.ALREADY_DEPLOYED);
     } else {
@@ -103,7 +105,9 @@ export class JettonDeployController {
       .beginParse()
       .readAddress()!;
 
-    params.onProgress?.(JettonDeployState.AWAITING_MINTER_DEPLOY);
+      console.log("Jetton wallet", ownerJWalletAddr.toFriendly());
+
+    params.onProgress?.(JettonDeployState.AWAITING_JWALLET_DEPLOY);
     await waitForContractDeploy(ownerJWalletAddr, this._client);
 
     params.onProgress?.(JettonDeployState.VERIFY_MINT, undefined, contractAddr.toFriendly()); // TODO better way of emitting the contract?

@@ -53,7 +53,7 @@ export class MnemonicProvider implements TonConnectionProvider {
         bounce: false,
         body: new CommonMessageInfo({
           stateInit: new CellMessage(Cell.fromBoc(Buffer.from(b64InitCell, "base64"))[0]),
-          body: null,
+          body: request.message && new CellMessage(request.message),
         }),
       }),
     });
