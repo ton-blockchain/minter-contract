@@ -1,35 +1,20 @@
-import { TransactionDetails } from "../../transaction-sender";
-import { Wallet, WalletAdapter, WalletAdapter_ } from "../types";
-import {
-  Cell,
-  CellMessage,
-  CommonMessageInfo,
-  InternalMessage,
-  SendMode,
-  TonClient,
-  Wallet as TonWallet,
-  WalletContract,
-  WalletV3R1Source,
-} from "ton";
+import { Cell, CellMessage, CommonMessageInfo, InternalMessage, SendMode, TonClient, WalletContract, WalletV3R1Source } from "ton";
 import { mnemonicToWalletKey } from "ton-crypto";
+import { TransactionDetails } from "../transaction-sender";
+import { Wallet } from "../wallets/types";
+import { TonConnectionProvider } from "./ton-connection";
 
-export class TonClientAdapter implements WalletAdapter_ {
-  private _tonClient: TonClient;
+export class MnemonicProvider implements TonConnectionProvider {
   private _mnemonic: string[];
-  private _wallet_contract: WalletContract;
-
-  constructor(tonClient: TonClient, mnemonic: string[]) {
-    this._tonClient = tonClient;
+  private _tonClient: TonClient;
+  constructor(mnemonic: string[], tonClient: TonClient) {
     this._mnemonic = mnemonic;
+    this._tonClient = tonClient;
   }
-
-  isAvailable(): boolean {
-    return true;
-  }
-  async createSession(name: string): Promise<void> {
+  async requestTransaction(request: TransactionDetails, onSuccess?: () => void): Promise<void> {
     const wk = await mnemonicToWalletKey(this._mnemonic);
-
-    this._wallet_contract = WalletContract.create(
+    
+    const walletContract = WalletContract.create(
       this._tonClient,
       //TODO VER
       WalletV3R1Source.create({
@@ -37,20 +22,7 @@ export class TonClientAdapter implements WalletAdapter_ {
         workchain: 0,
       })
     );
-    return Promise.resolve();
-  }
-  async awaitReadiness(session: void): Promise<Wallet> {
-    TonWallet.open();
     
-    throw new Error("Method not implemented.");
-  }
-  async getWallet(session: void): Promise<Wallet> {
-    throw new Error("Method not implemented.");
-  }
-  async requestTransaction(
-    request: TransactionDetails,
-    onSuccess?: () => void
-  ): Promise<void> {
     const seqno = await walletContract.getSeqNo();
     const INIT_CELL = new Cell();
 
@@ -87,5 +59,23 @@ export class TonClientAdapter implements WalletAdapter_ {
     });
 
     await this._tonClient.sendExternalMessage(walletContract, transfer);
+  }
+  async connect(): Promise<Wallet> {
+    const wk = await mnemonicToWalletKey(this._mnemonic);
+    
+    const walletContract = WalletContract.create(
+      this._tonClient,
+      //TODO VER
+      WalletV3R1Source.create({
+        publicKey: wk.publicKey,
+        workchain: 0,
+      })
+    );
+
+    return {
+      address: walletContract.address.toFriendly(),
+      publicKey: wk.publicKey.toString("hex"),
+      walletVersion: "PROBLEM" 
+    };
   }
 }

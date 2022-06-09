@@ -23,17 +23,20 @@ export interface Wallet {
   walletVersion: string;
 }
 
-export interface WalletAdapter<S> {
+export interface WalletSession {}
+
+export interface WalletAdapter {
   isAvailable(): boolean;
-  createSession(name: string): Promise<S>;
-  awaitReadiness(session: S): Promise<Wallet>;
-  getWallet(session: S): Promise<Wallet>;
+  createSession(name: string): Promise<WalletSession>;
+  awaitReadiness(session: WalletSession): Promise<Wallet>;
+  getWallet(session: WalletSession): Promise<Wallet>;
   requestTransaction(
-    session: S,
+    session: WalletSession,
     request: TransactionDetails,
     onSuccess?: () => void
   ): Promise<void>;
 }
+
 
 export interface TonWalletProvider {
   isTonWallet: boolean;

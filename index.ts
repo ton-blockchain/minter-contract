@@ -3,3 +3,4 @@ export * from "./lib/env-profiles";
 export * from "./lib/contract-deployer";
 export * from "./lib/transaction-sender";
 export * from "./lib/wallets";
+export * from "./lib/ton-connection";

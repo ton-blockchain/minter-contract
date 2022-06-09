@@ -1,3 +1,4 @@
+import BN from "bn.js";
 import {
   JettonDeployState,
   JettonDeployController,
@@ -5,24 +6,33 @@ import {
   Environments,
   ContractDeployer,
   WalletService,
-} from "jetton-deployer-contracts";
-import { Adapters } from "jetton-deployer-contracts/dist/lib/wallets/types";
+  TonConnection,
+} from "../index";
 import { TonClient, Address } from "ton";
+import { AdapterTypes } from "../lib/wallets/AdapterFactory";
+import { Adapters } from "../lib/wallets/types";
+import { MnemonicProvider } from "../lib/ton-connection/MnemonicProvider";
+
+const MNEMONIC = (process.env.MNEMONIC as string).split(" ");
 
 (async () => {
   const tonClient = new TonClient({ endpoint: EnvProfiles[Environments.SANDBOX].rpcApi });
   const dep = new JettonDeployController(tonClient);
 
-  await dep.createJetton(
+  const con = new TonConnection(new MnemonicProvider(MNEMONIC, tonClient));
+  
+  const addrr = await dep.createJetton(
     {
-      amountToMint: 100,
+      amountToMint: new BN(100),
       jettonName: "MyJetton",
       jettonSymbol: "MYJ",
       owner: Address.parse("kQDBQnDNDtDoiX9np244sZmDcEyIYmMcH1RiIxh59SRpKZsb"),
+      onProgress: console.log
     },
     new ContractDeployer(),
-    Adapters.SHAHAR,
-    "",
-    new WalletService()
+    con
   );
+
+  console.log("Jetton address:", addrr.toFriendly());
+  
 })();
