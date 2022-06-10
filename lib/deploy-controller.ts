@@ -50,7 +50,7 @@ export class JettonDeployController {
 
     params.onProgress?.(JettonDeployState.BALANCE_CHECK);
     const balance = await tonConnection._tonClient.getBalance(params.owner);
-    if (balance.lt(JETTON_DEPLOY_GAS)) throw new Error("Not enough balance in deployer wallet");
+    // if (balance.lt(JETTON_DEPLOY_GAS)) throw new Error("Not enough balance in deployer wallet");
 
     const metadata: { [s in JettonMetaDataKeys]?: string } = {
       name: params.jettonName,
@@ -71,7 +71,7 @@ export class JettonDeployController {
 
     console.log("Jetton contract", contractAddr.toFriendly());
 
-    if (await tonConnection._tonClient.isContractDeployed(contractAddr)) {
+    if (false && await tonConnection._tonClient.isContractDeployed(contractAddr)) {
       params.onProgress?.(JettonDeployState.ALREADY_DEPLOYED);
     } else {
       await contractDeployer.deployContract(deployParams, tonConnection);
