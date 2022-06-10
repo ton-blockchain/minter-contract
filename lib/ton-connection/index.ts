@@ -1,4 +1,4 @@
 export * from "./ton-connection";
-export * from "./TonhubProvider";
+export * from "./tonhub-provider";
 export * from "./chrome-ext-provider";
-export * from "./MnemonicProvider";
+export * from "./mnemonic-provider";

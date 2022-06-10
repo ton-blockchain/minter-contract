@@ -88,7 +88,7 @@ export class JettonDeployController {
     if (deployedOwnerAddress.toFriendly() !== params.owner.toFriendly())
       throw new Error("Contract deployed incorrectly");
 
-    // todo what's the deal with idx:false
+    // todo why idx:false?
     const jwalletAddressRes = await tonConnection._tonClient.callGetMethod(contractAddr, "get_wallet_address", [
       [
         "tvm.Slice",
