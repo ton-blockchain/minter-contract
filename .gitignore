@@ -7,3 +7,5 @@ tonwallets/wallets
 .nyc_output
 tonwallets
 lib/cmd_temp.ts
+dist
+*.tgz

@@ -1,7 +1,6 @@
 import BN from "bn.js";
 import { Address, Cell, contractAddress, StateInit } from "ton";
-import { WalletService } from "./wallets";
-import { Adapters } from "./wallets/types";
+import { TonConnection } from "@ton-defi.org/ton-connection";
 
 interface ContractDeployDetails {
   deployer: Address;
@@ -23,14 +22,12 @@ export class ContractDeployer {
 
   async deployContract(
     params: ContractDeployDetails,
-    adapterId: Adapters,
-    session: any,
-    walletService: WalletService
+    tonConnection: TonConnection
   ): Promise<Address> {
     const _contractAddress = this.addressForContract(params);
 
     if (!params.dryRun) {
-      await walletService.requestTransaction(adapterId, session, {
+      await tonConnection.requestTransaction({
         to: _contractAddress,
         value: params.value,
         stateInit: new StateInit({ data: params.data, code: params.code }),

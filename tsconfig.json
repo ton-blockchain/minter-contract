@@ -1,20 +1,19 @@
 {
   "compilerOptions": {
     "jsx": "react",
-    "jsx": "react",
-    "jsx": "react",
-    "target": "es2016",
+    "target": "es2015",
     "module": "commonjs",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "rootDir": "lib",
+    "rootDir": "",
     "outDir": "dist",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "declaration": true
   },
-  "include": ["lib"],
-  "exclude": ["node_modules", "dist"],
+  // "include": ["lib"],
+  "exclude": ["node_modules", "dist", "tonwallets"],
   "ts-node": {
     "transpileOnly": true,
     "transpiler": "ts-node/transpilers/swc"
