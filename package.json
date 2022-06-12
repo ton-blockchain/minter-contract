@@ -11,6 +11,7 @@
   "bugs": {
     "url": "https://github.com/ton-defi-org/jetton-deployer-contracts/issues"
   },
+  "homepage": "https://github.com/ton-defi-org/jetton-deployer-contracts#readme",
   "scripts": {
     "prettier": "npx prettier --write '{test,contracts,build}/**/*.{ts,js,json}'",
     "test": "mocha  --exit test/**/*.spec.ts",
@@ -68,7 +69,7 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^2.0.1",
-    "@ton-defi.org/ton-connection": "^0.0.1",
+    "@ton-defi.org/ton-connection": "^0.0.2",
     "axios-request-throttle": "^1.0.0",
     "dotenv": "^16.0.0",
     "ton": "^11.15.0",
