@@ -1,12 +1,6 @@
-import {
-  JettonDeployController,
-  EnvProfiles,
-  Environments,
-  TonConnection,
-  JettonDeployState,
-} from "../index";
+import { JettonDeployController, EnvProfiles, Environments, JettonDeployState } from "../index";
 import { Address, toNano } from "ton";
-import { MnemonicProvider } from "ton-connection";
+import { MnemonicProvider, TonConnection } from "ton-connection";
 
 const MNEMONIC = (process.env.MNEMONIC as string).split(" ");
 
@@ -18,16 +12,18 @@ const MNEMONIC = (process.env.MNEMONIC as string).split(" ");
 
   const { address } = await con.connect();
 
-  const addrr = await dep.createJetton(
+  const minterAddress = await dep.createJetton(
     {
       amountToMint: toNano(100),
       jettonName: "MyJetton",
-      jettonSymbol: "MJT5",
+      jettonSymbol: "MJT6",
       owner: Address.parse(address),
       onProgress: (e) => console.log(JettonDeployState[e]),
     },
     con
   );
 
-  console.log("Jetton address:", addrr.toFriendly());
+  const details = await dep.getJettonDetails(minterAddress, Address.parse(address), con);
+
+  console.log("\nOn-chain contract data:\n", JSON.stringify(details, null, 3));
 })();
