@@ -4,6 +4,13 @@
   "version": "0.0.1",
   "license": "MIT",
   "author": "ton-defi.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ton-defi-org/jetton-deployer-contracts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ton-defi-org/jetton-deployer-contracts/issues"
+  },
   "scripts": {
     "prettier": "npx prettier --write '{test,contracts,build}/**/*.{ts,js,json}'",
     "test": "mocha  --exit test/**/*.spec.ts",
