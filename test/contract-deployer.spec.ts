@@ -4,7 +4,7 @@ import { randomAddress } from "./helpers";
 import chai, { expect } from "chai";
 import * as sinon from "ts-sinon";
 import sinonChai from "sinon-chai";
-import { TonConnection } from "../lib/ton-connection/ton-connection";
+import { TonConnection } from "@ton-defi.org/ton-connection";
 
 chai.use(sinonChai);
 

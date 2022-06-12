@@ -12,7 +12,7 @@ import {
 import BN from "bn.js";
 import chaiAsPromised from "chai-as-promised";
 import { buildOnChainData } from "../contracts/jetton-minter";
-import { TonConnection } from "../lib/ton-connection/ton-connection";
+import { TonConnection } from "@ton-defi.org/ton-connection";
 
 chai.use(chaiAsPromised);
 chai.use(sinonChai);

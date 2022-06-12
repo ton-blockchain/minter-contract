@@ -61,10 +61,10 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^2.0.1",
+    "@ton-defi.org/ton-connection": "^0.0.1",
     "axios-request-throttle": "^1.0.0",
     "dotenv": "^16.0.0",
     "ton": "^11.15.0",
-    "ton-connection": "file:../../ton-connect/ton-connection-0.0.1.tgz",
     "ton-contracts": "^3.1.0",
     "ton-crypto": "^3.1.0",
     "ton-x": "^0.6.0"

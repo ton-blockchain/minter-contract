@@ -1,6 +1,6 @@
 import { JettonDeployController, EnvProfiles, Environments, JettonDeployState } from "../index";
 import { Address, toNano } from "ton";
-import { MnemonicProvider, TonConnection } from "ton-connection";
+import { MnemonicProvider, TonConnection } from "@ton-defi.org/ton-connection";
 
 const MNEMONIC = (process.env.MNEMONIC as string).split(" ");
 

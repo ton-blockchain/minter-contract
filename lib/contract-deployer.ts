@@ -1,7 +1,6 @@
 import BN from "bn.js";
 import { Address, Cell, contractAddress, StateInit } from "ton";
-import { WalletService } from "./wallets";
-import { TonConnection } from "./ton-connection/ton-connection";
+import { TonConnection } from "@ton-defi.org/ton-connection";
 
 interface ContractDeployDetails {
   deployer: Address;

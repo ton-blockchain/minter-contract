@@ -6,7 +6,7 @@ import { ContractDeployer } from "./contract-deployer";
 import axios from "axios";
 import axiosThrottle from "axios-request-throttle";
 import { parseGetMethodCall, waitForContractDeploy } from "./utils";
-import { TonConnection } from "ton-connection";
+import { TonConnection } from "@ton-defi.org/ton-connection";
 import {
   initData,
   mintBody,
