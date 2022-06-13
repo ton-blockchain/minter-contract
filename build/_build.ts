@@ -12,6 +12,7 @@ import process from "process";
 import child_process from "child_process";
 import glob from "fast-glob";
 import { Cell } from "ton";
+import semver from "semver";
 
 const takeFirstNonNpmBinCmd = (cmd: string) => {
   const cmdPath = child_process
@@ -43,18 +44,32 @@ const prepareCommandPaths = () => {
     funcPath = takeFirstNonNpmBinCmd("func");
   }
 
+  // TODO remove .cell
+  // TODO rename => .bitcode.json
+  // TODO restore postinstall
+  // TODO remove dependency on semver
+  // TODO merge back to web
+  
+  // TODO (deeplink if mobile in ton-connection) - allow param in constructor
+
   // make sure func compiler is available
-  let funcVersion = "";
-  try {
-    funcVersion = child_process.execSync(`${funcPath} -V`).toString();
-    console.log(funcVersion);
-  } catch (e) {
-    /*ignore*/
-  }
-  if (!funcVersion.includes("FunC semantic version")) {
-    console.log("\nFATAL ERROR: 'func' executable is not found, is it installed and in path?");
-    process.exit(1);
-  }
+  // const minSupportFunc = "0.2.0";
+  // let funcVersion = "";
+  // try {
+  //   funcVersion = child_process
+  //     .execSync(`${funcPath} -V | awk -F ' ' '/semantic version/ {print $4}'`)
+  //     .toString();
+  //   console.log(funcVersion);
+  //   semver.gte(semver.coerce(funcVersion) ?? "", minSupportFunc); // TODO
+  // } catch (e) {
+  //   /*ignore*/
+  // }
+  // if (!funcVersion.includes("FunC semantic version")) {
+  //   console.log(
+  //     "\nFATAL ERROR: 'func' with version >= 0.2.0 executable is not found, is it installed and in path?"
+  //   );
+  //   process.exit(1);
+  // }
 
   // make sure fift cli is available
   let fiftVersion = "";
@@ -103,7 +118,7 @@ async function main() {
       console.log(` - Deleting old build artifact '${cellArtifact}'`);
       fs.unlinkSync(cellArtifact);
     }
-    const hexArtifact = `build/${contractName}-hex.json`;
+    const hexArtifact = `build/${contractName}-bitcode.json`;
     if (fs.existsSync(hexArtifact)) {
       console.log(` - Deleting old build artifact '${hexArtifact}'`);
       fs.unlinkSync(hexArtifact);
@@ -130,23 +145,6 @@ async function main() {
         ` - Warning: TL-B file for contract '${tlbFile}' not found, are your op consts according to standard?`
       );
     }
-
-    // create a merged fc file with source code from all dependencies
-    // let sourceToCompile = "";
-    // const importFiles = glob.sync([
-    //   "contracts/imports/*.fc",
-    //   "contracts/imports/*.func",
-    //   `contracts/imports/${contractName}/*.fc`,
-    //   `contracts/imports/${contractName}/*.func`,
-    // ]);
-    // for (const importFile of importFiles) {
-    //   console.log(` - Adding import '${importFile}'`);
-    //   sourceToCompile += `${fs.readFileSync(importFile).toString()}\n`;
-    // }
-    // console.log(` - Adding the contract itself '${rootContract}'`);
-    // sourceToCompile += `${fs.readFileSync(rootContract).toString()}\n`;
-    // fs.writeFileSync(mergedFuncArtifact, sourceToCompile);
-    // console.log(` - Build artifact created '${mergedFuncArtifact}'`);
 
     // run the func compiler to create a fif file
     console.log(` - Trying to compile '${rootContract}' with 'func' compiler..`);
@@ -190,13 +188,15 @@ async function main() {
       process.exit(1);
     }
 
+    // Remove intermediary
+    fs.unlinkSync(fiftCellArtifact);
+
     // make sure cell build artifact was created
     if (!fs.existsSync(cellArtifact)) {
       console.log(` - For some reason '${cellArtifact}' was not created!`);
       process.exit(1);
     } else {
       console.log(` - Build artifact created '${cellArtifact}'`);
-      fs.unlinkSync(fiftCellArtifact);
     }
 
     fs.writeFileSync(
@@ -206,13 +206,15 @@ async function main() {
       })
     );
 
+    // Remove intermediary
+    fs.unlinkSync(cellArtifact);
+
     // make sure hex artifact was created
     if (!fs.existsSync(hexArtifact)) {
       console.log(` - For some reason '${hexArtifact}' was not created!`);
       process.exit(1);
     } else {
       console.log(` - Build artifact created '${hexArtifact}'`);
-      fs.unlinkSync(cellArtifact);
     }
   }
 
