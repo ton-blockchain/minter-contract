@@ -2,7 +2,7 @@
 
 import BN from "bn.js";
 import { Address, beginCell, Cell, Slice, toNano } from "ton";
-import { WrappedSmartContract } from "./contract-deployer";
+import { WrappedSmartContract } from "./wrapped-smart-contract";
 import { OPS } from "./ops";
 
 export class JettonWallet extends WrappedSmartContract {
