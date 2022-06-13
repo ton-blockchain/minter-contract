@@ -13,24 +13,45 @@ import child_process from "child_process";
 import glob from "fast-glob";
 import { Cell } from "ton";
 
-async function main() {
-  console.log("=================================================================");
-  console.log("Build script running, let's find some FunC contracts to compile..");
+const takeFirstNonNpmBinCmd = (cmd: string) => {
+  const cmdPath = child_process
+    .execSync(`which -a ${cmd}`)
+    .toString()
+    .split("\n")
+    .filter((s) => s)
+    .filter((s) => !s.includes("node_modules/.bin"))[0];
 
+  if (!cmdPath) {
+    console.log(`\nFATAL ERROR: '${cmd}' executable is not found, is it installed and in path?`);
+    process.exit(1);
+  }
+
+  return cmdPath;
+};
+
+const prepareCommandPaths = () => {
   // if we have an explicit bin directory, use the executables there (needed for glitch.com)
+  let fiftPath: string, funcPath: string;
+
   if (fs.existsSync("bin")) {
-    process.env.PATH = path.join(__dirname, "..", "bin") + path.delimiter + process.env.PATH;
-    process.env.FIFTPATH = path.join(__dirname, "..", "bin", "fiftlib");
+    const binPath = path.join(__dirname, "..");
+    process.env.FIFTPATH = path.join(binPath, "fiftlib");
+    fiftPath = path.join(binPath, "fift");
+    funcPath = path.join(binPath, "func");
+  } else {
+    fiftPath = takeFirstNonNpmBinCmd("fift");
+    funcPath = takeFirstNonNpmBinCmd("func");
   }
 
   // make sure func compiler is available
   let funcVersion = "";
   try {
-    funcVersion = child_process.execSync("func -V").toString();
+    funcVersion = child_process.execSync(`${funcPath} -V`).toString();
+    console.log(funcVersion);
   } catch (e) {
     /*ignore*/
   }
-  if (!funcVersion.includes("Func build information")) {
+  if (!funcVersion.includes("FunC semantic version")) {
     console.log("\nFATAL ERROR: 'func' executable is not found, is it installed and in path?");
     process.exit(1);
   }
@@ -38,12 +59,21 @@ async function main() {
   // make sure fift cli is available
   let fiftVersion = "";
   try {
-    fiftVersion = child_process.execSync("fift -V").toString();
+    fiftVersion = child_process.execSync(`${fiftPath} -V`).toString();
   } catch (e) {}
   if (!fiftVersion.includes("Fift build information")) {
     console.log("\nFATAL ERROR: 'fift' executable is not found, is it installed and in path?");
     process.exit(1);
   }
+
+  return [fiftPath, funcPath];
+};
+
+async function main() {
+  console.log("=================================================================");
+  console.log("Build script running, let's find some FunC contracts to compile..");
+
+  const [fiftPath, funcPath] = prepareCommandPaths();
 
   // go over all the root contracts in the contracts directory
   const rootContracts = glob.sync(["contracts/*.fc", "contracts/*.func"]);
@@ -102,29 +132,34 @@ async function main() {
     }
 
     // create a merged fc file with source code from all dependencies
-    let sourceToCompile = "";
-    const importFiles = glob.sync([
-      "contracts/imports/*.fc",
-      "contracts/imports/*.func",
-      `contracts/imports/${contractName}/*.fc`,
-      `contracts/imports/${contractName}/*.func`,
-    ]);
-    for (const importFile of importFiles) {
-      console.log(` - Adding import '${importFile}'`);
-      sourceToCompile += `${fs.readFileSync(importFile).toString()}\n`;
-    }
-    console.log(` - Adding the contract itself '${rootContract}'`);
-    sourceToCompile += `${fs.readFileSync(rootContract).toString()}\n`;
-    fs.writeFileSync(mergedFuncArtifact, sourceToCompile);
-    console.log(` - Build artifact created '${mergedFuncArtifact}'`);
+    // let sourceToCompile = "";
+    // const importFiles = glob.sync([
+    //   "contracts/imports/*.fc",
+    //   "contracts/imports/*.func",
+    //   `contracts/imports/${contractName}/*.fc`,
+    //   `contracts/imports/${contractName}/*.func`,
+    // ]);
+    // for (const importFile of importFiles) {
+    //   console.log(` - Adding import '${importFile}'`);
+    //   sourceToCompile += `${fs.readFileSync(importFile).toString()}\n`;
+    // }
+    // console.log(` - Adding the contract itself '${rootContract}'`);
+    // sourceToCompile += `${fs.readFileSync(rootContract).toString()}\n`;
+    // fs.writeFileSync(mergedFuncArtifact, sourceToCompile);
+    // console.log(` - Build artifact created '${mergedFuncArtifact}'`);
 
     // run the func compiler to create a fif file
-    console.log(` - Trying to compile '${mergedFuncArtifact}' with 'func' compiler..`);
-    const buildErrors = child_process
-      .execSync(
-        `func -APS -o build/${contractName}.fif ${mergedFuncArtifact} 2>&1 1>node_modules/.tmpfunc`
-      )
-      .toString();
+    console.log(` - Trying to compile '${rootContract}' with 'func' compiler..`);
+    let buildErrors: string;
+    try {
+      buildErrors = child_process
+        .execSync(
+          `${funcPath} -APS -o build/${contractName}.fif ${rootContract} 2>&1 1>node_modules/.tmpfunc`
+        )
+        .toString();
+    } catch (e) {
+      buildErrors = e.stdout.toString();
+    }
     if (buildErrors.length > 0) {
       console.log(" - OH NO! Compilation Errors! The compiler output was:");
       console.log(`\n${buildErrors}`);
@@ -142,14 +177,14 @@ async function main() {
     }
 
     // create a temp cell.fif that will generate the cell
-    let fiftCellSource = '"Asm.fif" include\n';
+    let fiftCellSource = "\"Asm.fif\" include\n";
     fiftCellSource += `${fs.readFileSync(fiftArtifact).toString()}\n`;
     fiftCellSource += `boc>B "${cellArtifact}" B>file`;
     fs.writeFileSync(fiftCellArtifact, fiftCellSource);
 
     // run fift cli to create the cell
     try {
-      child_process.execSync(`fift ${fiftCellArtifact}`);
+      child_process.execSync(`${fiftPath} ${fiftCellArtifact}`);
     } catch (e) {
       console.log("FATAL ERROR: 'fift' executable failed, is FIFTPATH env variable defined?");
       process.exit(1);
