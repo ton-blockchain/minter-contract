@@ -89,7 +89,7 @@ describe("Deploy Controller", () => {
 
     const contractAddr = await deployController.createJetton(deployPayload, tonConnectionStub);
 
-    expect(contractAddr.toFriendly()).to.equal("EQCSYPXwiwB80ojKM2mxUlMq7YJpDO1v64f3jThd3pUGfpar");
+    expect(contractAddr.toFriendly()).to.equal("EQCbLe2dnSjeIxzDR50wHDs1NUFKRwawaldpoEfk29dulMQ5");
     expect(tonConnectionStub.requestTransaction).to.have.been.calledOnce;
   });
 

@@ -17,6 +17,8 @@ import semver from "semver";
 // TODO merge back to web
 // TODO (deeplink if mobile in ton-connection) - allow param in constructor
 
+const minSupportFunc = "0.2.0";
+
 async function main() {
   console.log("=================================================================");
   console.log("Build script running, let's find some FunC contracts to compile..");
@@ -28,13 +30,13 @@ async function main() {
   }
 
   // make sure func compiler is available
-  const minSupportFunc = "0.2.0";
   try {
     const funcVersion = child_process
       .execSync("func -V")
       .toString()
       .match(/semantic version: v([0-9.]+)/)?.[1];
-    if (!semver.gte(semver.coerce(funcVersion) ?? "", minSupportFunc)) throw new Error("Not good");
+    if (!semver.gte(semver.coerce(funcVersion) ?? "", minSupportFunc))
+      throw new Error("Nonexistent version or outdated");
   } catch (e) {
     console.log(e);
     console.log(
