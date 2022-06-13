@@ -19,9 +19,8 @@
     "test:watch": "mocha --watch --watch-files test/**/*.ts,lib/**/*.ts,contracts/**/*.ts test/**/*.spec.ts",
     "build": "ts-node ./build/_build.ts",
     "deploy": "ts-node ./build/_deploy.ts",
-    "dist": "ncc build index.ts --target=es5",
     "deploy:testnet": "ts-node ./build/_deploy.ts",
-    "_postinstall": "ts-node ./build/_setup.ts"
+    "postinstall": "ts-node ./build/_setup.ts"
   },
   "files": [
     "dist"

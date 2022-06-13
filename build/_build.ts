@@ -14,81 +14,44 @@ import glob from "fast-glob";
 import { Cell } from "ton";
 import semver from "semver";
 
-const takeFirstNonNpmBinCmd = (cmd: string) => {
-  const cmdPath = child_process
-    .execSync(`which -a ${cmd}`)
-    .toString()
-    .split("\n")
-    .filter((s) => s)
-    .filter((s) => !s.includes("node_modules/.bin"))[0];
-
-  if (!cmdPath) {
-    console.log(`\nFATAL ERROR: '${cmd}' executable is not found, is it installed and in path?`);
-    process.exit(1);
-  }
-
-  return cmdPath;
-};
-
-const prepareCommandPaths = () => {
-  // if we have an explicit bin directory, use the executables there (needed for glitch.com)
-  let fiftPath: string, funcPath: string;
-
-  if (fs.existsSync("bin")) {
-    const binPath = path.join(__dirname, "..");
-    process.env.FIFTPATH = path.join(binPath, "fiftlib");
-    fiftPath = path.join(binPath, "fift");
-    funcPath = path.join(binPath, "func");
-  } else {
-    fiftPath = takeFirstNonNpmBinCmd("fift");
-    funcPath = takeFirstNonNpmBinCmd("func");
-  }
-
-  // TODO remove .cell
-  // TODO rename => .bitcode.json
-  // TODO restore postinstall
-  // TODO remove dependency on semver
-  // TODO merge back to web
-  
-  // TODO (deeplink if mobile in ton-connection) - allow param in constructor
-
-  // make sure func compiler is available
-  // const minSupportFunc = "0.2.0";
-  // let funcVersion = "";
-  // try {
-  //   funcVersion = child_process
-  //     .execSync(`${funcPath} -V | awk -F ' ' '/semantic version/ {print $4}'`)
-  //     .toString();
-  //   console.log(funcVersion);
-  //   semver.gte(semver.coerce(funcVersion) ?? "", minSupportFunc); // TODO
-  // } catch (e) {
-  //   /*ignore*/
-  // }
-  // if (!funcVersion.includes("FunC semantic version")) {
-  //   console.log(
-  //     "\nFATAL ERROR: 'func' with version >= 0.2.0 executable is not found, is it installed and in path?"
-  //   );
-  //   process.exit(1);
-  // }
-
-  // make sure fift cli is available
-  let fiftVersion = "";
-  try {
-    fiftVersion = child_process.execSync(`${fiftPath} -V`).toString();
-  } catch (e) {}
-  if (!fiftVersion.includes("Fift build information")) {
-    console.log("\nFATAL ERROR: 'fift' executable is not found, is it installed and in path?");
-    process.exit(1);
-  }
-
-  return [fiftPath, funcPath];
-};
+// TODO merge back to web
+// TODO (deeplink if mobile in ton-connection) - allow param in constructor
 
 async function main() {
   console.log("=================================================================");
   console.log("Build script running, let's find some FunC contracts to compile..");
 
-  const [fiftPath, funcPath] = prepareCommandPaths();
+  // if we have an explicit bin directory, use the executables there (needed for glitch.com)
+  if (fs.existsSync("bin")) {
+    process.env.PATH = path.join(__dirname, "..", "bin") + path.delimiter + process.env.PATH;
+    process.env.FIFTPATH = path.join(__dirname, "..", "bin", "fiftlib");
+  }
+
+  // make sure func compiler is available
+  const minSupportFunc = "0.2.0";
+  try {
+    const funcVersion = child_process
+      .execSync("func -V")
+      .toString()
+      .match(/semantic version: v([0-9.]+)/)?.[1];
+    if (!semver.gte(semver.coerce(funcVersion) ?? "", minSupportFunc)) throw new Error("Not good");
+  } catch (e) {
+    console.log(e);
+    console.log(
+      `\nFATAL ERROR: 'func' with version >= ${minSupportFunc} executable is not found, is it installed and in path?`
+    );
+    process.exit(1);
+  }
+
+  // make sure fift cli is available
+  let fiftVersion = "";
+  try {
+    fiftVersion = child_process.execSync("fift -V").toString();
+  } catch (e) {}
+  if (!fiftVersion.includes("Fift build information")) {
+    console.log("\nFATAL ERROR: 'fift' executable is not found, is it installed and in path?");
+    process.exit(1);
+  }
 
   // go over all the root contracts in the contracts directory
   const rootContracts = glob.sync(["contracts/*.fc", "contracts/*.func"]);
@@ -152,7 +115,7 @@ async function main() {
     try {
       buildErrors = child_process
         .execSync(
-          `${funcPath} -APS -o build/${contractName}.fif ${rootContract} 2>&1 1>node_modules/.tmpfunc`
+          `func -APS -o build/${contractName}.fif ${rootContract} 2>&1 1>node_modules/.tmpfunc`
         )
         .toString();
     } catch (e) {
@@ -182,7 +145,7 @@ async function main() {
 
     // run fift cli to create the cell
     try {
-      child_process.execSync(`${fiftPath} ${fiftCellArtifact}`);
+      child_process.execSync(`fift ${fiftCellArtifact}`);
     } catch (e) {
       console.log("FATAL ERROR: 'fift' executable failed, is FIFTPATH env variable defined?");
       process.exit(1);
