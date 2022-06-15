@@ -1,81 +1,19 @@
-# Jetton deployer
+# Jetton deployer contracts
 
-> A library for deploying [Jettons](https://github.com/ton-blockchain/TIPs/issues/74) on the [Ton blockchain](https://ton.org/)
-
-## How to use
+A library for building and deploying [Jettons](https://github.com/ton-blockchain/TIPs/issues/74) on the [Ton blockchain](https://ton.org/)
 
 > Note: This library is in alpha. Use at your own risk.
 
-1. Instantiate a `JettonDeployController`
+## Building
+1. You should have the latest ton binaries installed. See the [tonstarter-contracts repo for instructions](https://github.com/ton-defi-org/tonstarter-contracts/#dependencies-and-requirements)
+2. The contracts in this repo are compatible with the [vanilla jetton contracts](https://github.com/ton-blockchain/token-contract), updated for the func 0.2.0. If you wish to modify them to support different jetton configurations (such as max supply), edit the contract files (jetton-minter.fc and jetton-wallet.fc) as needed.
+3. Run `npm run build`
 
-```
-const dep = new JettonDeployController();
-```
+## Deploying
+### Using jetton-deployer-web webapp (easiest)
+1. The easiest way is to use the [webapp](https://github.com/jetton-deployer/jetton-deployer-web) // TODO replace with github.io link
+2. If you modified the contract func code:
+   * Fork the webapp project
+   * Replace the included `jetton-minter.compiled.json` and `jetton-wallet.compiled.json` files
 
-2. Connect a wallet provider
-
-The provider is responsible for sending the transcations necessary for creating the jetton contract.
-
-Current supported wallet providers are:
-
-- Tonhub (via [ton-x](https://github.com/ton-foundation/ton-x) connector)
-- Ton wallet chrome extension
-- Mnemonic-based provider
-
-Further providers can be added (PRs are welcome).
-
-Example:
-
-```
-const tonHubCon = new TonConnection(
-  new TonhubProvider({
-    isSandbox: true,
-    onSessionLinkReady: (session) => {
-      // For example, display `session.link` as a QR code for the mobile tonhub wallet to scan
-    },
-    persistenceProvider: localStorage, // If you want the persist the session
-  }),
-  EnvProfiles[Environments.SANDBOX].rpcApi
-);
-const wallet = await tonHubCon.connect(); // Get wallet details
-```
-
-1. Create the jetton
-
-```
-const contractAddress = await dep.createJetton(
-  {
-    owner: ... // Wallet address of owner,
-    onProgress: (depState, err, extra) => {},
-    jettonName: jettonParams.name,
-    jettonSymbol: jettonParams.symbol,
-    amountToMint: toNano(jettonParams.mintAmount),
-  },
-  tonHubCon
-);
-```
-
-## Building jetton contracts from source
-
-The library relies on precompiled jetton contracts. Their source code is available at contracts/jetton-minter.fc and contracts/jetton-wallet.fc.
-
-The contract code can be modified and built using `npm run build`, which will generate compiled code as hex to be consumed by the deployer.
-
-To build, follow instructions at `https://github.com/ton-defi-org/tonstarter-contracts`.
-
-## Running on web
-
-In order to use this package with a web app, a node-compatible buffer library should be available. (See [buffer](https://www.npmjs.com/package/buffer))
-
-See example at https://github.com/jetton-deployer/jetton-deployer-web
-
-## Roadmap
-
-- Support max supply tokens
-- Support minting to different addresses
-
-## Test
-
-- In the root repo dir, run in terminal `npm run test`
-- Don't forget to build (or rebuild) before running tests
-- Tests are running inside Node.js by running TVM in web-assembly using `ton-contract-executor`
+### Deploying manually
