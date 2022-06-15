@@ -86,11 +86,17 @@ export function parseOnChainData(contentCell: Cell): {
 }
 
 // return the init Cell of the contract storage (according to load_data() contract method)
-export function initData(owner: Address, data: { [s in JettonMetaDataKeys]?: string | undefined }) {
+export function initData() {
+  const owner = Address.parse("EQD4gS-Nj2Gjr2FYtg-s3fXUvjzKbzHGZ5_1Xe_V0-GCp0p2");
   return beginCell()
     .storeCoins(0)
     .storeAddress(owner)
-    .storeRef(buildOnChainData(data))
+    .storeRef(
+      buildOnChainData({
+        name: "MyJetton",
+        symbol: "JET1"
+      })
+    )
     .storeRef(JETTON_WALLET_CODE)
     .endCell();
 }

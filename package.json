@@ -69,13 +69,11 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^2.0.1",
-    "@ton-defi.org/ton-connection": "^0.0.2",
     "axios-request-throttle": "^1.0.0",
     "dotenv": "^16.0.0",
     "semver": "^7.3.7",
-    "ton": "^11.15.0",
+    "ton": "^11.16.0",
     "ton-contracts": "^3.1.0",
-    "ton-crypto": "^3.1.0",
-    "ton-x": "^0.6.0"
+    "ton-crypto": "^3.1.0"
   }
 }

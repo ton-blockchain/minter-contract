@@ -3,19 +3,18 @@
 // The script assumes that it is running from the repo root, and the directories are organized this way:
 //  ./build/ - directory for build artifacts (mycontract.compiled.json) and deploy init data scripts (mycontract.deploy.ts)
 //  ./.env - config file with DEPLOYER_MNEMONIC - secret mnemonic of deploying wallet (will be created if not found)
-
-import axios from "axios";
+import axios from "ton/node_modules/axios";
+import axios2 from "axios";
 import axiosThrottle from "axios-request-throttle";
 axiosThrottle.use(axios, { requestsPerSecond: 0.5 }); // required since toncenter jsonRPC limits to 1 req/sec without API key
-
+axiosThrottle.use(axios2, { requestsPerSecond: 0.5 }); // required since toncenter jsonRPC limits to 1 req/sec without API key
 import dotenv from "dotenv";
 dotenv.config();
 
 import fs from "fs";
 import path from "path";
 import glob from "fast-glob";
-import { Address, Cell, CellMessage, CommonMessageInfo, fromNano, InternalMessage, StateInit, toNano } from "ton";
-import { TonClient, WalletContract, WalletV3R2Source, contractAddress, SendMode } from "ton";
+import { Address, Cell, CellMessage, CommonMessageInfo, contractAddress, fromNano, InternalMessage, SendMode, StateInit, toNano, TonClient, WalletContract, WalletV3R2Source } from "ton";
 import { mnemonicNew, mnemonicToWalletKey } from "ton-crypto";
 
 async function main() {
@@ -30,7 +29,8 @@ async function main() {
   }
 
   // initialize globals
-  const client = new TonClient({ endpoint: `https://${process.env.TESTNET ? "testnet." : ""}toncenter.com/api/v2/jsonRPC` });
+  // const client = new TonClient({ endpoint: `https://${process.env.TESTNET ? "testnet." : ""}toncenter.com/api/v2/jsonRPC` });
+  const client = new TonClient({ endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC" });
   const deployerWalletType = "org.ton.wallets.v3.r2"; // also see WalletV3R2Source class used below
   const newContractFunding = toNano(0.02); // this will be (almost in full) the balance of a new deployed contract and allow it to pay rent
   const workchain = 0; // normally 0, only special contracts should be deployed to masterchain (-1)
