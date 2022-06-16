@@ -13,8 +13,8 @@ import {
 const ONCHAIN_CONTENT_PREFIX = 0x00;
 const SNAKE_PREFIX = 0x00;
 
-import walletHex from "../build/jetton-wallet-bitcode.json";
-import minterHex from "../build/jetton-minter-bitcode.json";
+import walletHex from "../build/jetton-wallet.compiled.json";
+import minterHex from "../build/jetton-minter.compiled.json";
 
 export const JETTON_WALLET_CODE = Cell.fromBoc(walletHex.hex)[0];
 export const JETTON_MINTER_CODE = Cell.fromBoc(minterHex.hex)[0]; // code cell from build output
