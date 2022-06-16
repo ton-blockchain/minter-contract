@@ -52,7 +52,7 @@ export function buildOnChainData(data: {
   Object.entries(data).forEach(([k, v]: [string, string | undefined]) => {
     if (!jettonOnChainMetadataSpec[k as JettonMetaDataKeys])
       throw new Error(`Unsupported onchain key: ${k}`);
-    if (v === undefined) return;
+    if (v === undefined || v === "") return;
 
     let bufferToStore = Buffer.from(
       v,
