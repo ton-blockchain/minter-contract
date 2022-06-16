@@ -1,26 +1,32 @@
-import { sendInternalMessageWithWallet } from "../test/helpers";
 
-import BN from "bn.js";
-import { Cell, beginCell, Address, toNano, beginDict, WalletContract } from "ton";
+import { Cell, beginCell, Address, WalletContract } from "ton";
 
 import walletHex from "./jetton-wallet.compiled.json";
 import minterHex from "./jetton-minter.compiled.json";
-import { Sha256 } from "@aws-crypto/sha256-js";
 import { buildOnChainData, parseOnChainData } from "../contracts/jetton-minter";
 
 export const JETTON_WALLET_CODE = Cell.fromBoc(walletHex.hex)[0];
 export const JETTON_MINTER_CODE = Cell.fromBoc(minterHex.hex)[0]; // code cell from build output
 
+const jettonParams = {
+  owner: Address.parse("EQD4gS-Nj2Gjr2FYtg-s3fXUvjzKbzHGZ5_1Xe_V0-GCp0p2"),
+  name: "MyJetton",
+  symbol: "JET1",
+  image: undefined, // Image url
+  description: "My jetton",
+};
+
 // return the init Cell of the contract storage (according to load_data() contract method)
 export function initData() {
-  const owner = Address.parse("EQD4gS-Nj2Gjr2FYtg-s3fXUvjzKbzHGZ5_1Xe_V0-GCp0p2");
   return beginCell()
     .storeCoins(0)
-    .storeAddress(owner)
+    .storeAddress(jettonParams.owner)
     .storeRef(
       buildOnChainData({
-        name: "MyJetton",
-        symbol: "JET1",
+        name: jettonParams.name,
+        symbol: jettonParams.symbol,
+        image: jettonParams.image,
+        description: jettonParams.description
       })
     )
     .storeRef(JETTON_WALLET_CODE)
