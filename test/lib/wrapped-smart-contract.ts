@@ -1,21 +1,6 @@
 import { Address, beginCell, Cell, contractAddress } from "ton";
 import { SmartContract } from "ton-contract-executor";
-import { WORKCHAIN } from "../../lib/consts";
-
-export function filterLogs(logs: string) {
-  const arr = logs.split("\n");
-  //    console.log(arr.length);
-
-  let filtered = arr.filter((it) => {
-    return it.indexOf("#DEBUG#") !== -1 || it.indexOf("error") !== -1;
-  });
-  const beautified = filtered.map((it, i) => {
-    const tabIndex = it.indexOf("\t");
-    return `${i + 1}. ${it.substring(tabIndex + 1, it.length)}`;
-  });
-
-  return beautified;
-}
+const WORKCHAIN = 0;
 
 export class WrappedSmartContract {
   contract: SmartContract;

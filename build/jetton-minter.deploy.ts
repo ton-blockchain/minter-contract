@@ -1,16 +1,37 @@
-import * as jettonMinter from "../contracts/jetton-minter";
-import { Address, toNano, TupleSlice, WalletContract } from "ton";
-import { sendInternalMessageWithWallet } from "../test/helpers";
-import { BN } from "bn.js";
+
+import { Cell, beginCell, Address, WalletContract } from "ton";
+
+import walletHex from "./jetton-wallet.compiled.json";
+import minterHex from "./jetton-minter.compiled.json";
+import { buildOnChainData, parseOnChainData } from "../contracts/jetton-minter";
+
+export const JETTON_WALLET_CODE = Cell.fromBoc(walletHex.hex)[0];
+export const JETTON_MINTER_CODE = Cell.fromBoc(minterHex.hex)[0]; // code cell from build output
+
+const jettonParams = {
+  owner: Address.parse("EQD4gS-Nj2Gjr2FYtg-s3fXUvjzKbzHGZ5_1Xe_V0-GCp0p2"),
+  name: "MyJetton",
+  symbol: "JET1",
+  image: undefined, // Image url
+  description: "My jetton",
+};
 
 // return the init Cell of the contract storage (according to load_data() contract method)
-// export function initData() {
-//   return jettonMinter.data({
-//     totalSupply: new BN(100000000),
-//     adminAddress: Address.parseFriendly("EQD5677K8UgJ6OWmQT74oRUI5lB7be15jW_ot7oNweN-PdcN").address,
-//     offchainUri: 'https://api.jsonbin.io/b/628d3eef402a5b38020beade',
-//   });
-// }
+export function initData() {
+  return beginCell()
+    .storeCoins(0)
+    .storeAddress(jettonParams.owner)
+    .storeRef(
+      buildOnChainData({
+        name: jettonParams.name,
+        symbol: jettonParams.symbol,
+        image: jettonParams.image,
+        description: jettonParams.description
+      })
+    )
+    .storeRef(JETTON_WALLET_CODE)
+    .endCell();
+}
 
 // return the op that should be sent to the contract on deployment, can be "null" to send an empty message
 export function initMessage() {
@@ -18,16 +39,14 @@ export function initMessage() {
 }
 
 // optional end-to-end sanity test for the actual on-chain contract to see it is actually working on-chain
-// export async function postDeployTest(walletContract: WalletContract, secretKey: Buffer, contractAddress: Address) {
-// const call = await walletContract.client.callGetMethod(contractAddress, "counter");
-// const counter = new TupleSlice(call.stack).readBigNumber();
-// console.log(`   # Getter 'counter' = ${counter.toString()}`);
+export async function postDeployTest(
+  walletContract: WalletContract,
+  secretKey: Buffer,
+  contractAddress: Address
+) {
+  const call = await walletContract.client.callGetMethod(contractAddress, "get_jetton_data");
 
-// const message = main.increment();
-// await sendInternalMessageWithWallet({ walletContract, secretKey, to: contractAddress, value: toNano(0.02), body: message });
-// console.log(`   # Sent 'increment' op message`);
-
-// const call2 = await walletContract.client.callGetMethod(contractAddress, "counter");
-// const counter2 = new TupleSlice(call2.stack).readBigNumber();
-// console.log(`   # Getter 'counter' = ${counter2.toString()}`);
-// }
+  console.log(
+    parseOnChainData(Cell.fromBoc(Buffer.from(call.stack[3][1].bytes, "base64").toString("hex"))[0])
+  );
+}

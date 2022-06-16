@@ -19,9 +19,8 @@
     "test:watch": "mocha --watch --watch-files test/**/*.ts,lib/**/*.ts,contracts/**/*.ts test/**/*.spec.ts",
     "build": "ts-node ./build/_build.ts",
     "deploy": "ts-node ./build/_deploy.ts",
-    "dist": "ncc build index.ts --target=es5",
     "deploy:testnet": "ts-node ./build/_deploy.ts",
-    "_postinstall": "ts-node ./build/_setup.ts"
+    "postinstall": "ts-node ./build/_setup.ts"
   },
   "files": [
     "dist"
@@ -35,6 +34,7 @@
     "@types/chai-as-promised": "^7.1.5",
     "@types/mocha": "^9.1.1",
     "@types/node": "^17.0.41",
+    "@types/semver": "^7.3.9",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
     "@typescript-eslint/parser": "^5.27.0",
     "@vercel/ncc": "^0.34.0",
@@ -69,12 +69,11 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^2.0.1",
-    "@ton-defi.org/ton-connection": "^0.0.2",
     "axios-request-throttle": "^1.0.0",
     "dotenv": "^16.0.0",
-    "ton": "^11.15.0",
+    "semver": "^7.3.7",
+    "ton": "^11.16.0",
     "ton-contracts": "^3.1.0",
-    "ton-crypto": "^3.1.0",
-    "ton-x": "^0.6.0"
+    "ton-crypto": "^3.1.0"
   }
 }

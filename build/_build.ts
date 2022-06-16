@@ -12,6 +12,7 @@ import process from "process";
 import child_process from "child_process";
 import glob from "fast-glob";
 import { Cell } from "ton";
+import semver from "semver";
 
 async function main() {
   console.log("=================================================================");
@@ -24,14 +25,15 @@ async function main() {
   }
 
   // make sure func compiler is available
-  let funcVersion = "";
+  const minSupportFunc = "0.2.0";
   try {
-    funcVersion = child_process.execSync("func -V").toString();
+    const funcVersion = child_process
+      .execSync("func -V")
+      .toString()
+      .match(/semantic version: v([0-9.]+)/)?.[1];
+    if (!semver.gte(semver.coerce(funcVersion) ?? "", minSupportFunc)) throw new Error("Nonexistent version or outdated");
   } catch (e) {
-    /*ignore*/
-  }
-  if (!funcVersion.includes("Func build information")) {
-    console.log("\nFATAL ERROR: 'func' executable is not found, is it installed and in path?");
+    console.log(`\nFATAL ERROR: 'func' with version >= ${minSupportFunc} executable is not found, is it installed and in path?`);
     process.exit(1);
   }
 
@@ -73,7 +75,7 @@ async function main() {
       console.log(` - Deleting old build artifact '${cellArtifact}'`);
       fs.unlinkSync(cellArtifact);
     }
-    const hexArtifact = `build/${contractName}-hex.json`;
+    const hexArtifact = `build/${contractName}.compiled.json`;
     if (fs.existsSync(hexArtifact)) {
       console.log(` - Deleting old build artifact '${hexArtifact}'`);
       fs.unlinkSync(hexArtifact);
@@ -89,42 +91,20 @@ async function main() {
         const crc = crc32(tlbOpMessage);
         const asQuery = `0x${(crc & 0x7fffffff).toString(16)}`;
         const asResponse = `0x${((crc | 0x80000000) >>> 0).toString(16)}`;
-        console.log(
-          `   op '${
-            tlbOpMessage.split(" ")[0]
-          }': '${asQuery}' as query (&0x7fffffff), '${asResponse}' as response (|0x80000000)`
-        );
+        console.log(`   op '${tlbOpMessage.split(" ")[0]}': '${asQuery}' as query (&0x7fffffff), '${asResponse}' as response (|0x80000000)`);
       }
     } else {
-      console.log(
-        ` - Warning: TL-B file for contract '${tlbFile}' not found, are your op consts according to standard?`
-      );
+      console.log(` - Warning: TL-B file for contract '${tlbFile}' not found, are your op consts according to standard?`);
     }
-
-    // create a merged fc file with source code from all dependencies
-    let sourceToCompile = "";
-    const importFiles = glob.sync([
-      "contracts/imports/*.fc",
-      "contracts/imports/*.func",
-      `contracts/imports/${contractName}/*.fc`,
-      `contracts/imports/${contractName}/*.func`,
-    ]);
-    for (const importFile of importFiles) {
-      console.log(` - Adding import '${importFile}'`);
-      sourceToCompile += `${fs.readFileSync(importFile).toString()}\n`;
-    }
-    console.log(` - Adding the contract itself '${rootContract}'`);
-    sourceToCompile += `${fs.readFileSync(rootContract).toString()}\n`;
-    fs.writeFileSync(mergedFuncArtifact, sourceToCompile);
-    console.log(` - Build artifact created '${mergedFuncArtifact}'`);
 
     // run the func compiler to create a fif file
-    console.log(` - Trying to compile '${mergedFuncArtifact}' with 'func' compiler..`);
-    const buildErrors = child_process
-      .execSync(
-        `func -APS -o build/${contractName}.fif ${mergedFuncArtifact} 2>&1 1>node_modules/.tmpfunc`
-      )
-      .toString();
+    console.log(` - Trying to compile '${rootContract}' with 'func' compiler..`);
+    let buildErrors: string;
+    try {
+      buildErrors = child_process.execSync(`func -APS -o build/${contractName}.fif ${rootContract} 2>&1 1>node_modules/.tmpfunc`).toString();
+    } catch (e) {
+      buildErrors = e.stdout.toString();
+    }
     if (buildErrors.length > 0) {
       console.log(" - OH NO! Compilation Errors! The compiler output was:");
       console.log(`\n${buildErrors}`);
@@ -142,7 +122,7 @@ async function main() {
     }
 
     // create a temp cell.fif that will generate the cell
-    let fiftCellSource = '"Asm.fif" include\n';
+    let fiftCellSource = "\"Asm.fif\" include\n";
     fiftCellSource += `${fs.readFileSync(fiftArtifact).toString()}\n`;
     fiftCellSource += `boc>B "${cellArtifact}" B>file`;
     fs.writeFileSync(fiftCellArtifact, fiftCellSource);
@@ -155,13 +135,15 @@ async function main() {
       process.exit(1);
     }
 
+    // Remove intermediary
+    fs.unlinkSync(fiftCellArtifact);
+
     // make sure cell build artifact was created
     if (!fs.existsSync(cellArtifact)) {
       console.log(` - For some reason '${cellArtifact}' was not created!`);
       process.exit(1);
     } else {
       console.log(` - Build artifact created '${cellArtifact}'`);
-      fs.unlinkSync(fiftCellArtifact);
     }
 
     fs.writeFileSync(
@@ -171,13 +153,15 @@ async function main() {
       })
     );
 
+    // Remove intermediary
+    fs.unlinkSync(cellArtifact);
+
     // make sure hex artifact was created
     if (!fs.existsSync(hexArtifact)) {
       console.log(` - For some reason '${hexArtifact}' was not created!`);
       process.exit(1);
     } else {
       console.log(` - Build artifact created '${hexArtifact}'`);
-      fs.unlinkSync(cellArtifact);
     }
   }
 
