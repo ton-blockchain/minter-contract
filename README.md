@@ -61,7 +61,7 @@ Don't forget that we're dealing with programmable money here. Jettons are tradab
 
 1. **Never deploy smart contract code that you are unable to review**
 
-    Make sure you understand what you deploy. We went into a lot of effort to make sure everything is open source. The smart contract code that is deployed is available in this repo, you should review it and see that it's compatible with the [official standard version](https://github.com/ton-blockchain/token-contract/tree/main/ft). The HTML form that performs the deployment is [open source](https://github.com/ton-defi-org/jetton-deployer-webclient) as well and served from [GitHub Pages](https://ton-defi-org.github.io/jetton-deployer-webclient) so you can have confidence the source you see is what actually being served.
+    Make sure you understand what you deploy. We went into a lot of effort to make sure everything is open source. The smart contract code that is deployed is available in this repo, you should review it and see that it's compatible with the [official standard version](https://github.com/ton-blockchain/token-contract/tree/main/ft). The HTML form that performs the deployment is [open source](https://github.com/ton-defi-org/jetton-deployer-webclient) as well and served from [GitHub Pages](https://ton-defi-org.github.io/jetton-deployer-webclient) so you can have confidence the source you see is what actually being served. By deploying your Jetton, you are taking full responsibility over what you deploy. This repo is aimed for educational purposes only and provides no guarantees.
     
  2. **Revoke admin role in the Jetton as soon as possible**
 
