@@ -66,3 +66,35 @@ Don't forget that we're dealing with programmable money here. Jettons are tradab
  2. **Revoke admin role in the Jetton as soon as possible**
 
     The Jetton code allows a special admin role (the deployer wallet address) to mint new tokens for themselves. This functionality is necessary for the initial launch because that's how new Jettons enter circulation. Once you're finished with minting you must revoke your admin permissions by changing the admin to an empty address. A blockchain ecosystem is designed to be trustless. You should never take responsibility for your user funds, you don't want a misplaced key on your behalf to permit theft from other people! Revoking the admin role will guarantee that nobody will ever be able to mint new tokens in the future and crush your Jetton price.
+
+## Q&A: Is this contract deployer safe?
+
+Yes! Contract deployers that look like this are the safest you can get. This is actually the reason we implemented this deployer, to prevent people from getting hurt. Let's go over all the questions that **you should ask yourself** before using any deployer:
+
+1. *Are you making any money from this deployer? What's your business model? Why did you make it?*
+
+    No. This is a community project that is 100% open source. It's completely free to use and there is no business model. Because it's open source anyone can copy it. The reason we made it is to keep people safe. We are TON ecosystem contributors that want TON to succeed.
+
+2. *Do you have access to my token? Will you be able to mint my tokens to yourself and sell them?*
+
+    No. This deployer uses the [standard Jetton code](https://github.com/ton-blockchain/token-contract/tree/main/ft) published by TON foundation. The standard code has only one special admin address that can mint tokens. This admin address is your deployer wallet address (your wallet that pays the deploy fees).
+    
+3. *How can I check that you're actually using the standard Jetton smart contract code in this deployer?*
+
+    This deployer is open source so you can compare the code yourself. The standard Jetton code is [here](https://github.com/ton-blockchain/token-contract/tree/main/ft) - notice the TON blockchain repo. The code in this deployer is [here](https://github.com/ton-defi-org/jetton-deployer-contracts/tree/main/contracts).
+    
+4. *I'm using the HTML form to deploy from my browser, how can I be sure it's deploying the contract source code in the repo?*
+
+    The HTML form is also open source, you can see the compiled smart contract bytecode that it is deploying [here](https://github.com/ton-defi-org/jetton-deployer-webclient/tree/main/src/lib/contracts). You can build the FunC source code by yourself by cloning the [contract repo](https://github.com/ton-defi-org/jetton-deployer-contracts) and building it by running `npm install` and then `npm run build`. Then compare the build output in the `/build` directory.
+    
+5. *How can I be sure that the website I visit in my browser is actually serving the HTML source code in the repo?*
+
+    If you use the website to deploy, notice that the website is served by GitHub Pages - a cool service by GitHub that allows to serve websites directly from open source repos. The GitHub Actions that build the website are [here](https://github.com/ton-defi-org/jetton-deployer-webclient/tree/main/.github/workflows) and you can see that the repo name leads to the custom domain - https://ton-defi-org.github.io/jetton-deployer-webclient
+    
+6. *Does this deployer use any hidden backend servers that I don't have access to and the community can't audit?*
+
+    No. We went into a lot of effort to make this tool as trustless as possible. There are no backend services. The entire deployer runs client side in your browser so the community can audit every aspect of it.
+
+7. *I'm not technical enough to understand all the answers here, how can I still be confident you're telling the truth?*
+
+    If you can't audit everything by yourself, rely on other people in your community. Since this deployer is fully open source, anyone has access to it. We encourage technical people in the community to verify every aspect and let the community know if we missed anything by accident. The best way to feel confident that someone is telling the truth is that they offer 100% transparency.
