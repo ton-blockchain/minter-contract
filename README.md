@@ -1,24 +1,53 @@
-# Jetton deployer contracts
+# Jetton Deployer - Contracts
 
-A library for building and deploying [Jettons](https://github.com/ton-blockchain/TIPs/issues/74) on the [Ton blockchain](https://ton.org/)
+> Starter template for a [Jetton](https://github.com/ton-blockchain/TIPs/issues/74) project
 
-> Note: This library is in alpha. Use at your own risk.
+This project contains everything you need to deploy a new token (Jetton contract) to TON blockchain.
 
-## Overview
-This project contains the necessary components for deploying a jetton token on the ton network.
+&nbsp;
+## Option 1: Deploy a standard Jetton using your browser
 
-## Building
-1. You should have the latest ton binaries installed. See the [tonstarter-contracts repo for instructions](https://github.com/ton-defi-org/tonstarter-contracts/#dependencies-and-requirements)
-2. The contracts in this repo are compatible with the [vanilla jetton contracts](https://github.com/ton-blockchain/token-contract), updated for the func 0.2.0. If you wish to modify them to support different jetton configurations (such as max supply), edit the contract files (jetton-minter.fc and jetton-wallet.fc) as needed.
-3. Run `npm run build`
+This is by far the simpler option if you want to use the standard Jetton code. You will not need to install any tools on your machine, just open up your web browser, fill-in some data about your token in the HTML form and click deploy.
 
-## Deploying
-The easiest way is to use the [webapp](https://ton-defi-org.github.io/jetton-deployer-webclient), if you're using vanilla contracts.
+#### Instructions:
 
-If you want to deploy manually and/or change the contract code:
+1. Make sure you have a TON wallet with at least 0.25 TON balance. Supported wallets include [TonHub](https://ton.app/wallets/tonhub-wallet) and [Chrome Extension](https://ton.app/wallets/chrome-plugin).
 
-> This part uses the standard method of deploying, as defined in the [tonstarter-contracts repo](https://github.com/ton-defi-org/tonstarter-contracts/#development-instructions)
+2. Use your web browser to open the site: https://ton-defi-org.github.io/jetton-deployer-webclient
 
-1. Make sure you have a ton wallet with at least 0.25 TON balance.
-1. Edit `jettonParams` in `jetton-minter.deploy.ts` to set the jetton's name, symbol etc.
-1. Run `npm run deploy`
+3. Fill in the information about your Jetton in the form - choose a name, ticker and image.
+
+4. Click the "Connect Wallet" button to connect your wallet.
+
+5. Deploy and approve the deploy transaction in your wallet.
+
+6. Once the token is deployed, the deploying wallet will receive all the tokens that were minted.
+
+&nbsp;
+## Option 2: Edit the Jetton code to add a custom token behavior
+
+This is much more complicated and will allow you to change the actual behavior of the Jetton to any custom behavior you want to program with the [FunC](https://ton.org/docs/#/func) language. For example, let's say you want a special Jetton that pays a 1% fee to some address every time its transferred between users. For this option you will need to install the FunC compiler on your machine.
+
+> Note: This project is based on the [tonstarter-contracts](https://github.com/ton-defi-org/tonstarter-contracts) repo, consult it if you need more help.
+
+#### Instructions:
+
+1. Make sure you have all "Dependencies and Requirements" as described in [tonstarter-contracts](https://github.com/ton-defi-org/tonstarter-contracts/#dependencies-and-requirements) repo.
+
+2. Git clone the repo locally and rename the directory to your own project name.
+
+3. In the root repo dir, run in terminal `npm install`
+
+4. Edit the smart contract source files to implement your new custom behavior, they're here: `contracts/*.fc`
+
+5. Once you finish coding, build the project by running in the root repo dir `npm run build`
+
+6. If you want to test your code locally, implement TypeScript unit tests here: `test/*.spec.ts`
+
+7. Once your tests are ready, run them by running in the root repo dir `npm run test`
+
+8. Edit your token metadata (like name and ticker) in `jettonParams` in `build/jetton-minter.deploy.ts`
+
+9. Prepare at least 0.25 TON for deployment fees.
+
+9. To deploy the token, run in the root repo dir `npm run deploy` and follow the on-screen instructions.
