@@ -1,13 +1,12 @@
 import BN from "bn.js";
 import { Address, Cell, Slice } from "ton";
-import { parseOnChainData, JettonMetaDataKeys } from "../../contracts/jetton-minter";
+import { JettonMetaDataKeys, parseOnChainData } from "../../build/jetton-minter.deploy";
 
 interface JettonDetails {
   totalSupply: BN;
   address: Address;
   metadata: { [s in JettonMetaDataKeys]?: string };
 }
-
 export function parseJettonDetails(execResult: { result: any[] }): JettonDetails {
   return {
     totalSupply: execResult.result[0] as BN,
