@@ -3,15 +3,17 @@ import chaiBN from "chai-bn";
 import BN from "bn.js";
 chai.use(chaiBN(BN));
 
-import { Address, toNano } from "ton";
-import * as jetton_minter from "../contracts/jetton-minter";
-import * as jetton_wallet from "../contracts/jetton-wallet";
+import { Address, beginCell, toNano } from "ton";
 import { internalMessage, randomAddress } from "./helpers";
-import { parseJettonDetails, parseJettonWalletDetails } from "../jetton-utils";
+import { parseJettonDetails, parseJettonWalletDetails } from "./lib/jetton-utils";
 import { JettonMinter } from "./lib/jetton-minter";
 import { actionToMessage } from "./lib/utils";
 import { JettonWallet } from "./lib/jetton-wallet";
-import { JETTON_MINTER_CODE, JETTON_WALLET_CODE } from "../contracts/jetton-minter";
+import {
+  JETTON_WALLET_CODE,
+  JETTON_MINTER_CODE,
+  jettonMinterInitData,
+} from "../build/jetton-minter.deploy";
 
 const OWNER_ADDRESS = randomAddress("owner");
 const PARTICIPANT_ADDRESS_1 = randomAddress("participant_1");
@@ -26,15 +28,16 @@ describe("Jetton", () => {
   ): Promise<JettonWallet> =>
     await JettonWallet.create(
       JETTON_WALLET_CODE,
-      jetton_wallet.data({
-        walletOwnerAddress,
-        jettonMasterAddress,
-        jettonWalletCode: JETTON_WALLET_CODE,
-      })
+      beginCell()
+        .storeCoins(0)
+        .storeAddress(walletOwnerAddress)
+        .storeAddress(jettonMasterAddress)
+        .storeRef(JETTON_WALLET_CODE)
+        .endCell()
     );
 
   beforeEach(async () => {
-    const dataCell = jetton_minter.initData(OWNER_ADDRESS, {
+    const dataCell = jettonMinterInitData(OWNER_ADDRESS, {
       name: "MY_JETTON",
       symbol: "MJT",
     });

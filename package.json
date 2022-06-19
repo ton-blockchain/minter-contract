@@ -22,11 +22,6 @@
     "deploy:testnet": "ts-node ./build/_deploy.ts",
     "postinstall": "ts-node ./build/_setup.ts"
   },
-  "files": [
-    "dist"
-  ],
-  "types": "dist/index.d.ts",
-  "main": "dist/index.js",
   "devDependencies": {
     "@swc/core": "^1.2.177",
     "@types/bn.js": "^5.1.0",
