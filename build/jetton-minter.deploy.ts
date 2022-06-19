@@ -8,11 +8,14 @@ import { buildOnChainData, parseOnChainData } from "../contracts/jetton-minter";
 export const JETTON_WALLET_CODE = Cell.fromBoc(walletHex.hex)[0];
 export const JETTON_MINTER_CODE = Cell.fromBoc(minterHex.hex)[0]; // code cell from build output
 
+// This is example data - Modify these params for your own jetton! 
+// - Data is stored on-chain (except for the image data itself)
+// - Owner should usually be the deploying wallet's address.
 const jettonParams = {
   owner: Address.parse("EQD4gS-Nj2Gjr2FYtg-s3fXUvjzKbzHGZ5_1Xe_V0-GCp0p2"),
   name: "MyJetton",
   symbol: "JET1",
-  image: undefined, // Image url
+  image: "https://www.linkpicture.com/q/download_183.png", // Image url
   description: "My jetton",
 };
 
