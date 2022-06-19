@@ -122,7 +122,7 @@ async function main() {
     }
 
     // create a temp cell.fif that will generate the cell
-    let fiftCellSource = "\"Asm.fif\" include\n";
+    let fiftCellSource = '"Asm.fif" include\n';
     fiftCellSource += `${fs.readFileSync(fiftArtifact).toString()}\n`;
     fiftCellSource += `boc>B "${cellArtifact}" B>file`;
     fs.writeFileSync(fiftCellArtifact, fiftCellSource);
