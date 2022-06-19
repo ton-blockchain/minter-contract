@@ -7,7 +7,7 @@ import { Address, toNano } from "ton";
 import * as jetton_minter from "../contracts/jetton-minter";
 import * as jetton_wallet from "../contracts/jetton-wallet";
 import { internalMessage, randomAddress } from "./helpers";
-import { parseJettonDetails, parseJettonWalletDetails } from "../jetton-utils";
+import { parseJettonDetails, parseJettonWalletDetails } from "./lib/jetton-utils";
 import { JettonMinter } from "./lib/jetton-minter";
 import { actionToMessage } from "./lib/utils";
 import { JettonWallet } from "./lib/jetton-wallet";
