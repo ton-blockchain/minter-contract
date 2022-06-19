@@ -39,7 +39,7 @@ const sha256 = (str: string) => {
   return Buffer.from(sha.digestSync());
 };
 
-export function buildOnChainData(data: { [s: string]: string | undefined }): Cell {
+export function buildTokenMetadataCell(data: { [s: string]: string | undefined }): Cell {
   const KEYLEN = 256;
   const dict = beginDict(KEYLEN);
 
@@ -72,7 +72,7 @@ export function buildOnChainData(data: { [s: string]: string | undefined }): Cel
   return beginCell().storeInt(ONCHAIN_CONTENT_PREFIX, 8).storeDict(dict.endDict()).endCell();
 }
 
-export function parseOnChainData(contentCell: Cell): {
+export function parseTokenMetadataCell(contentCell: Cell): {
   [s in JettonMetaDataKeys]?: string;
 } {
   // Note that this relies on what is (perhaps) an internal implementation detail:
@@ -124,7 +124,7 @@ export function jettonMinterInitData(
   return beginCell()
     .storeCoins(0)
     .storeAddress(owner)
-    .storeRef(buildOnChainData(metadata))
+    .storeRef(buildTokenMetadataCell(metadata))
     .storeRef(JETTON_WALLET_CODE)
     .endCell();
 }
@@ -153,6 +153,8 @@ export async function postDeployTest(
   const call = await walletContract.client.callGetMethod(contractAddress, "get_jetton_data");
 
   console.log(
-    parseOnChainData(Cell.fromBoc(Buffer.from(call.stack[3][1].bytes, "base64").toString("hex"))[0])
+    parseTokenMetadataCell(
+      Cell.fromBoc(Buffer.from(call.stack[3][1].bytes, "base64").toString("hex"))[0]
+    )
   );
 }
