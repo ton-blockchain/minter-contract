@@ -3,33 +3,36 @@
 // The script assumes that it is running from the repo root, and the directories are organized this way:
 //  ./build/ - directory for build artifacts (mycontract.compiled.json) and deploy init data scripts (mycontract.deploy.ts)
 //  ./.env - config file with DEPLOYER_MNEMONIC - secret mnemonic of deploying wallet (will be created if not found)
-import axios from "ton/node_modules/axios";
-import axios2 from "axios";
+
+import axios from "axios";
 import axiosThrottle from "axios-request-throttle";
 axiosThrottle.use(axios, { requestsPerSecond: 0.5 }); // required since toncenter jsonRPC limits to 1 req/sec without API key
-axiosThrottle.use(axios2, { requestsPerSecond: 0.5 }); // required since toncenter jsonRPC limits to 1 req/sec without API key
+
 import dotenv from "dotenv";
 dotenv.config();
 
 import fs from "fs";
 import path from "path";
 import glob from "fast-glob";
-import { Address, Cell, CellMessage, CommonMessageInfo, contractAddress, fromNano, InternalMessage, SendMode, StateInit, toNano, TonClient, WalletContract, WalletV3R2Source } from "ton";
+import { Address, Cell, CellMessage, CommonMessageInfo, fromNano, InternalMessage, StateInit, toNano } from "ton";
+import { TonClient, WalletContract, WalletV3R2Source, contractAddress, SendMode } from "ton";
 import { mnemonicNew, mnemonicToWalletKey } from "ton-crypto";
 
 async function main() {
-  console.log("=================================================================");
-  console.log("Deploy script running, let's find some contracts to deploy..");
+  console.log(`=================================================================`);
+  console.log(`Deploy script running, let's find some contracts to deploy..`);
+
+  const isTestnet = process.env.TESTNET || process.env.npm_lifecycle_event == "deploy:testnet";
 
   // check input arguments (given through environment variables)
-  if (process.env.TESTNET || process.env.npm_lifecycle_event == "deploy:testnet") {
-    console.log("\n* We are working with 'testnet' (https://t.me/testgiver_ton_bot will give you test TON)");
+  if (isTestnet) {
+    console.log(`\n* We are working with 'testnet' (https://t.me/testgiver_ton_bot will give you test TON)`);
   } else {
-    console.log("\n* We are working with 'mainnet'");
+    console.log(`\n* We are working with 'mainnet'`);
   }
 
   // initialize globals
-  const client = new TonClient({ endpoint: `https://${process.env.TESTNET ? "testnet." : ""}toncenter.com/api/v2/jsonRPC` });
+  const client = new TonClient({ endpoint: `https://${isTestnet ? "testnet." : ""}toncenter.com/api/v2/jsonRPC` });
   const deployerWalletType = "org.ton.wallets.v3.r2"; // also see WalletV3R2Source class used below
   const newContractFunding = toNano(0.02); // this will be (almost in full) the balance of a new deployed contract and allow it to pay rent
   const workchain = 0; // normally 0, only special contracts should be deployed to masterchain (-1)
@@ -94,13 +97,13 @@ async function main() {
     const newContractAddress = contractAddress({ workchain, initialData: initDataCell, initialCode: initCodeCell });
     console.log(` - Based on your init code+data, your new contract address is: ${newContractAddress.toFriendly()}`);
     if (await client.isContractDeployed(newContractAddress)) {
-      console.log(" - Looks like the contract is already deployed in this address, skipping deployment");
+      console.log(` - Looks like the contract is already deployed in this address, skipping deployment`);
       await performPostDeploymentTest(rootContract, deployInitScript, walletContract, walletKey.secretKey, newContractAddress);
       continue;
     }
 
     // deploy by sending an internal message to the deploying wallet
-    console.log(" - Let's deploy the contract on-chain..");
+    console.log(` - Let's deploy the contract on-chain..`);
     const seqno = await walletContract.getSeqNo();
     const transfer = walletContract.createTransfer({
       secretKey: walletKey.secretKey,
@@ -117,11 +120,11 @@ async function main() {
       }),
     });
     await client.sendExternalMessage(walletContract, transfer);
-    console.log(" - Deploy transaction sent successfully");
+    console.log(` - Deploy transaction sent successfully`);
 
     // make sure that the contract was deployed
     console.log(` - Block explorer link: https://${process.env.TESTNET ? "test." : ""}tonwhales.com/explorer/address/${newContractAddress.toFriendly()}`);
-    console.log(" - Waiting up to 20 seconds to check if the contract was actually deployed..");
+    console.log(` - Waiting up to 20 seconds to check if the contract was actually deployed..`);
     for (let attempt = 0; attempt < 10; attempt++) {
       await sleep(2000);
       const seqnoAfter = await walletContract.getSeqNo();
@@ -137,7 +140,7 @@ async function main() {
     }
   }
 
-  console.log("");
+  console.log(``);
 }
 
 main();
@@ -153,6 +156,6 @@ async function performPostDeploymentTest(rootContract: string, deployInitScript:
     console.log(` - Not running a post deployment test, '${rootContract}' does not have 'postDeployTest()' function`);
     return;
   }
-  console.log(" - Running a post deployment test:");
+  console.log(` - Running a post deployment test:`);
   await deployInitScript.postDeployTest(walletContract, secretKey, newContractAddress);
 }
