@@ -56,8 +56,28 @@ This is much more complicated and will allow you to change the actual behavior o
 
 &nbsp;
 ## Jetton metadata field best practices
-* **Jetton Name** - 1-3 words usually, unabbreviated project name with spaces with each word capitalized. For example, for bitcoincash.org use `Bitcoin Cash`
 
+* **Jetton Name** - For example: `Bitcoin Cash`<br>Usually 1-3 words, unabbreviated project name with spaces with each word capitalized. Our running example will be the [bitcoincash.org](https://bitcoincash.org) project which is a fork of Bitcoin.
+
+* **Jetton Symbol** - For example: `BCH`<br>Usually 3-5 uppercase characters, the currency symbol for the token. This would usually appear next to the amount when the token balance is [displayed](https://img.gadgethacks.com/img/12/13/63649303499825/0/bitcoin-cash-is-now-available-coinbase.w1456.jpg). This would also appear in exchanges where the token is listed as the [ticker](https://www.coingecko.com/en/coins/bitcoin-cash).
+
+* **Decimals** - For example: `9`<br>The decimal precision of your token (9 is TON default). Blockchains store floating point numbers (like 1.2345) as integers with a given precision. Under 9 decimals precision the balance 1.2345 BCH will be encoded as 1234500000 and the smallest balance possible to encode is 0.000000001 BCH which is encoded as 1. The balance 1 BCH is encoded as 1000000000.
+
+* **Tokens to Mint** - For example: `21,000,000`<br>Number of initial tokens to mint and send to your wallet address (float). In our example, let's mint the entire supply as in Bitcoin, 21 million coins. Notice that the value here is a float number and is not encoded according to the decimal precision in the previous field. So for 21,000,000 BCH we will input 21000000 and not 21000000000000000.
+
+* **Description** - For example: `Low fee peer-to-peer electronic cash alternative to Bitcoin`<br>Optional freeform sentence explaining about your project. This can be left empty. Its purpose is to give a little more background detail about the project beyond the name. Don't make this part too long (longer than one sentence) because it's stored on-chain and can get costly.
+
+* **Jetton Logo URI** - For example: `https://bitcoincash-example.github.io/website/logo.png`<br>URL of 256x256 pixel PNG image of the token logo with transparent background. Notice that this logo is not immutable (unlike the rest of the fields) and can be changed in the future of the project as its update poses no security risks to users. It should be placed on hosting where multiple maintainers can be given easy access, which makes GitHub Pages a good solution since it can support multiple community contributors and PRs. The best practice would be this:
+
+    1. Create a new free GitHub organization for your project, you can follow the instructions [here](https://docs.github.com/en/organizations/collaborating-with-groups-in-organizations/creating-a-new-organization-from-scratch). In our example we created the organization `bitcoincash-example` which you can see [here](https://github.com/bitcoincash-example).
+    
+    2. Under this new organization, create a new public repository with the name `website`, you can follow the instructions [here](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository). In our example you can see the repo [here](https://github.com/bitcoincash-example/website).
+    
+    3. Upload your PNG image to this repository and enable GitHub Pages on it, you can follow the instructions [here](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site). The result should be a live website like https://bitcoincash-example.github.io/website/logo.png where your image is hosted.
+    
+    4. If you can afford it, we recommend to buy a custom domain for your project like `bitcoincash.org`. Use any domain seller like [Google Domains](https://domains.google/) or [GoDaddy](https://www.godaddy.com/). Then, connect your custom domain to the repository in the previous step, you can follow the instructions [here](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site).
+    
+    5. If you have a custom domain, your image URL should be `https://bitcoincash.org/logo.png` instead of the `github.io` one. This will remove any future dependency on GitHub and allow you to switch hosting in the future which is a good option to keep.
 
 &nbsp;
 ## Protect yourself and your users
