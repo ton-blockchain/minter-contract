@@ -57,7 +57,7 @@ This is much more complicated and will allow you to change the actual behavior o
 &nbsp;
 ## Jetton metadata field best practices
 
-* **Jetton Name** - For example: `Bitcoin Cash`<br>Usually 1-3 words, unabbreviated project name with spaces with each word capitalized. Our running example will be the [bitcoincash.org](https://bitcoincash.org) project which is a fork of Bitcoin.
+* **Jetton Name** - For example: `Bitcoin Cash`<br>Usually 1-3 words, unabbreviated project name with spaces with each word capitalized. Our running example will be the [bitcoincash.org](https://bitcoincash.org) project which is a fork of the Bitcoin token.
 
 * **Jetton Symbol** - For example: `BCH`<br>Usually 3-5 uppercase characters, the currency symbol for the token. This would usually appear next to the amount when the token balance is [displayed](https://img.gadgethacks.com/img/12/13/63649303499825/0/bitcoin-cash-is-now-available-coinbase.w1456.jpg). This would also appear in exchanges where the token is listed as the [ticker](https://www.coingecko.com/en/coins/bitcoin-cash).
 
@@ -73,7 +73,7 @@ This is much more complicated and will allow you to change the actual behavior o
     
     2. Under this new organization, create a new public repository with the name `website`, you can follow the instructions [here](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository). In our example you can see the repo [here](https://github.com/bitcoincash-example/website).
     
-    3. Upload your PNG image to this repository and enable GitHub Pages on it, you can follow the instructions [here](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site). The result should be a live website like https://bitcoincash-example.github.io/website/logo.png where your image is hosted.
+    3. Upload your PNG image to this repository and enable GitHub Pages on it, you can follow the instructions [here](https://docs.github.com/en/repositories/working-with-files/managing-files/adding-a-file-to-a-repository) and then [here](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site). The result should be a live website like https://bitcoincash-example.github.io/website/logo.png where your image is hosted.
     
     4. If you can afford it, we recommend to buy a custom domain for your project like `bitcoincash.org`. Use any domain seller like [Google Domains](https://domains.google/) or [GoDaddy](https://www.godaddy.com/). Then, connect your custom domain to the repository in the previous step, you can follow the instructions [here](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site).
     
