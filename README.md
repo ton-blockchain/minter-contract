@@ -2,7 +2,7 @@
 
 > Starter template for a [Jetton](https://github.com/ton-blockchain/TIPs/issues/74) project
 
-This project contains everything you need to deploy a new token (Jetton contract) to TON blockchain.
+This project contains everything you need to deploy a new token (Jetton contract) to TON blockchain. This project is free and open source and was created for educational purposes.
 
 &nbsp;
 ## Option 1: Deploy a standard Jetton using your browser
