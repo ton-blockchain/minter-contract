@@ -52,7 +52,12 @@ This is much more complicated and will allow you to change the actual behavior o
 
 9. Prepare at least 0.25 TON for deployment fees.
 
-9. To deploy the token, run in the root repo dir `npm run deploy` and follow the on-screen instructions.
+10. To deploy the token, run in the root repo dir `npm run deploy` and follow the on-screen instructions.
+
+&nbsp;
+## Jetton metadata field best practices
+* **Jetton Name** - 1-3 words usually, unabbreviated project name with spaces with each word capitalized. For example, for bitcoincash.org use `Bitcoin Cash`
+
 
 &nbsp;
 ## Protect yourself and your users
