@@ -81,15 +81,15 @@ This is much more complicated and will allow you to change the actual behavior o
 
 * **Where is this metadata stored?** - The Jetton standard supports storing metadata either on-chain or in an off-chain URL (a JSON file hosted somewhere). It is our belief that the best practice is storing metadata on-chain. Why? Let's explore the alternatives:
 
-  * *On-chain* - On-chain data is immutable, users can be guaranteed that important fields like the symbol will not change without their consent. On-chain data is also guaranteed to always be available.
+  * *On-chain* - On-chain data is immutable, users can be guaranteed that important fields like the symbol will not change without their consent. On-chain data is also guaranteed to always be available. This deployer always stores metadata on-chain.
   
   * *Off-chain IPFS* (`ipfs://` URL) - IPFS data is immutable so it's safe like on-chain. But IPFS data is not guaranteed to always be available. Availability depends if someone is willing to pin the data (similar to seeding in torrents). If this someone goes out of business or suffers downtime, token metadata will disappear. This is an unnecessary risk in our eyes.
   
   * *Off-chain website* (`https://` URL) - This is by far the worst option. The owner of the website could change the metadata without user consent (not necessarily on purpose if the website is hacked). The website can also be taken down and the metadata will disappear. Users should never invest money in tokens that have their metadata stored this way.
  
-    What about the Jetton Logo URI, if it's stored on a website, can't it change? Yes, it can change and this is a feature. We believe that logos can go through rebranding without putting users at risk. Satoshi Nakamoto didn't design the current logo of Bitcoin when he wrote the initial code.
+  What about the Jetton Logo URI, if it's stored on a website, can't it change? Yes, it can change and this is a feature. We believe that logos can go through rebranding without putting users at risk. Satoshi Nakamoto didn't design the current logo of Bitcoin when he wrote the initial code.
 
-    I don't see the metadata in a wallet or block explorer, why? Many tools reused their NFT parsing code where metadata is much bigger and cannot be stored on-chain due to cost. Please open issues with these tools to fix and display on-chain metadata which is supported by the official standard.
+  I don't see the metadata in a wallet or block explorer, why? Many tools reused their NFT parsing code where metadata is much bigger and cannot be stored on-chain due to cost. Please open issues with these tools to fix and display on-chain metadata which is supported by the official standard.
 
 &nbsp;
 ## Protect yourself and your users
