@@ -79,7 +79,7 @@ This is much more complicated and will allow you to change the actual behavior o
     
     5. If you have a custom domain, your image URL should be `https://bitcoincash.org/logo.png` instead of the `github.io` one. This will remove any future dependency on GitHub and allow you to switch hosting in the future which is a good option to keep.
 
-* **Where is this metadata stored?** - The Jetton standard supports storing metadata either on-chain or in an off-chain URL (a JSON file hosted somewhere). It is our belief that the best practice is storing metadata on-chain. Why? Let's explore the alternatives:
+* **Where is this metadata stored?** - [The Jetton standard](https://github.com/ton-blockchain/TIPs/issues/64) supports storing metadata either on-chain or in an off-chain URL (a JSON file hosted somewhere). It is our belief that the best practice is storing metadata on-chain. Why? Let's explore the alternatives:
 
   * *On-chain* - On-chain data is immutable, users can be guaranteed that important fields like the symbol will not change without their consent. On-chain data is also guaranteed to always be available. This deployer always stores metadata on-chain.
   
