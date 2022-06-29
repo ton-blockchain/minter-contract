@@ -28,7 +28,7 @@ This is by far the simpler option if you want to use the standard Jetton code. Y
 &nbsp;
 ## Option 2: Edit the Jetton code to add a custom token behavior
 
-This is much more complicated and will allow you to change the actual behavior of the Jetton to any custom behavior you want to program with the [FunC](https://ton.org/docs/#/func) language. For example, let's say you want a special Jetton that pays a 1% fee to some address every time its transferred between users. For this option you will need to install the FunC compiler on your machine.
+This is much more complicated and will allow you to change the actual behavior of the Jetton to any custom behavior you want to program with the [FunC](https://ton.org/docs/#/func) language. For example, let's say you want a special Jetton that pays a 1% fee to some address every time it's transferred between users. Since this behavior is different from the standard, for this option you will need to install the FunC compiler on your machine.
 
 > Note: This project is based on the [tonstarter-contracts](https://github.com/ton-defi-org/tonstarter-contracts) repo, consult it if you need more help.
 
