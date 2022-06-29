@@ -90,7 +90,7 @@ Don't forget that we're dealing with programmable money here. Jettons are tradab
     
  2. **Revoke admin role in the Jetton as soon as possible**
 
-    The Jetton code allows a special admin role (the deployer wallet address) to mint new tokens for themselves. This functionality is necessary for the initial launch because that's how new Jettons enter circulation. Once you're finished with minting you must revoke your admin permissions by changing the admin to an empty address. A blockchain ecosystem is designed to be trustless. You should never take responsibility for your user funds, you don't want a misplaced key on your behalf to permit theft from other people! Revoking the admin role will guarantee that nobody will ever be able to mint new tokens in the future and crush your Jetton price.
+    The Jetton code allows a special admin role (the deployer wallet address) to mint new tokens for themselves. This functionality is necessary for the initial launch because that's how new Jettons enter circulation. Once you're finished with minting you must revoke your admin permissions by changing the admin to an empty address. A blockchain ecosystem is designed to be trustless. You should never take responsibility for your users' funds, you don't want a misplaced key on your behalf to permit theft from other people! Revoking the admin role will guarantee that nobody will ever be able to mint new tokens in the future and crush your Jetton price.
 
 ## Q&A: Is this contract deployer safe?
 
