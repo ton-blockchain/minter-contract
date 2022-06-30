@@ -50,7 +50,7 @@ export function buildTokenMetadataCell(data: { [s: string]: string | undefined }
 
     let bufferToStore = Buffer.from(v, jettonOnChainMetadataSpec[k as JettonMetaDataKeys]);
 
-    const CELL_MAX_SIZE_BYTES = 750 / 8; // TODO figure out this number
+    const CELL_MAX_SIZE_BYTES = Math.floor(1023 / 8);
 
     const rootCell = new Cell();
     let currentCell = rootCell;
