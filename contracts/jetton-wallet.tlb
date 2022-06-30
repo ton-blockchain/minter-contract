@@ -1,4 +1,9 @@
+// https://ton.org/docs/#/overviews/TL-B
 // base types defined in https://github.com/ton-blockchain/ton/blob/master/crypto/block/block.tlb
+
+// storage (according to save_data() contract method)
+
+storage#_ balance:Grams owner_address:MsgAddressInt jetton_master_address:MsgAddressInt jetton_wallet_code:^Cell = Storage
 
 // ops
 
