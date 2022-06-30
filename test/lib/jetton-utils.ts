@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { Address, Cell, Slice } from "ton";
+import { Address, Slice } from "ton";
 import { JettonMetaDataKeys, parseTokenMetadataCell } from "../../build/jetton-minter.deploy";
 
 interface JettonDetails {
