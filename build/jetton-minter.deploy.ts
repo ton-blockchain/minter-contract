@@ -66,7 +66,7 @@ export function buildTokenMetadataCell(data: { [s: string]: string | undefined }
       }
     }
 
-    dict.storeCell(sha256(k), rootCell);
+    dict.storeRef(sha256(k), rootCell);
   });
 
   return beginCell().storeInt(ONCHAIN_CONTENT_PREFIX, 8).storeDict(dict.endDict()).endCell();
@@ -102,7 +102,7 @@ export function parseTokenMetadataCell(contentCell: Cell): {
       return v;
     };
 
-    return sliceToVal(s, buffer);
+    return sliceToVal(s.readRef(), buffer);
   });
 
   const res: { [s in JettonMetaDataKeys]?: string } = {};
