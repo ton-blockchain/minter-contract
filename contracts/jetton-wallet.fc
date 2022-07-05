@@ -138,7 +138,7 @@ const gas_consumption = 10000000; ;; 0.01 TON
         .end_cell();
 
     var msg = begin_cell()
-      .store_uint(0x18, 6)
+      .store_uint(0x10, 6) ;; we should not bounce here cause receiver can have uninitialized contract
       .store_slice(owner_address)
       .store_coins(forward_ton_amount)
       .store_uint(1, 1 + 4 + 4 + 64 + 32 + 1 + 1)
@@ -149,7 +149,7 @@ const gas_consumption = 10000000; ;; 0.01 TON
 
   if ((response_address.preload_uint(2) != 0) & (msg_value > 0)) {
     var msg = begin_cell()
-      .store_uint(0x10, 6) ;; nobounce - int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool src:MsgAddress -> 011000
+      .store_uint(0x10, 6) ;; nobounce - int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool src:MsgAddress -> 010000
       .store_slice(response_address)
       .store_coins(msg_value)
       .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
