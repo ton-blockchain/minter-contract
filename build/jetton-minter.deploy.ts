@@ -91,7 +91,7 @@ export function parseTokenMetadataCell(contentCell: Cell): {
 
     const sliceToVal = (s: Slice, v: Buffer, isFirst: boolean) => {
       s.toCell().beginParse();
-      if (false && s.readUint(8).toNumber() !== SNAKE_PREFIX)
+      if (isFirst && s.readUint(8).toNumber() !== SNAKE_PREFIX)
         throw new Error("Only snake format is supported");
 
       v = Buffer.concat([v, s.readRemainingBytes()]);
