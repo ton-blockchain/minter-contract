@@ -53,10 +53,10 @@ export function buildTokenMetadataCell(data: { [s: string]: string | undefined }
     const CELL_MAX_SIZE_BYTES = Math.floor((1023 - 8) / 8);
 
     const rootCell = new Cell();
+    rootCell.bits.writeUint8(SNAKE_PREFIX);
     let currentCell = rootCell;
 
     while (bufferToStore.length > 0) {
-      currentCell.bits.writeUint8(SNAKE_PREFIX);
       currentCell.bits.writeBuffer(bufferToStore.slice(0, CELL_MAX_SIZE_BYTES));
       bufferToStore = bufferToStore.slice(CELL_MAX_SIZE_BYTES);
       if (bufferToStore.length > 0) {
@@ -89,20 +89,20 @@ export function parseTokenMetadataCell(contentCell: Cell): {
   const dict = contentSlice.readDict(KEYLEN, (s) => {
     const buffer = Buffer.from("");
 
-    const sliceToVal = (s: Slice, v: Buffer) => {
+    const sliceToVal = (s: Slice, v: Buffer, isFirst: boolean) => {
       s.toCell().beginParse();
-      if (s.readUint(8).toNumber() !== SNAKE_PREFIX)
+      if (isFirst && s.readUint(8).toNumber() !== SNAKE_PREFIX)
         throw new Error("Only snake format is supported");
 
       v = Buffer.concat([v, s.readRemainingBytes()]);
       if (s.remainingRefs === 1) {
-        v = sliceToVal(s.readRef(), v);
+        v = sliceToVal(s.readRef(), v, false);
       }
 
       return v;
     };
 
-    return sliceToVal(s.readRef(), buffer);
+    return sliceToVal(s.readRef(), buffer, true);
   });
 
   const res: { [s in JettonMetaDataKeys]?: string } = {};
