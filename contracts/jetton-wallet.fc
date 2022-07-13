@@ -65,6 +65,7 @@ const gas_consumption = 10000000; ;; 0.01 TON
   slice response_address = in_msg_body~load_msg_addr();
   cell custom_payload = in_msg_body~load_dict();
   int forward_ton_amount = in_msg_body~load_coins();
+  throw_unless(708, slice_bits(in_msg_body) >= 1);
   slice either_forward_payload = in_msg_body;
   var msg = begin_cell()
     .store_uint(0x18, 6)
