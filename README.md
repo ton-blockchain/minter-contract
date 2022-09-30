@@ -139,3 +139,6 @@ Yes! Contract deployers that look like this are the safest you can get. This is 
 8. *What happens if somebody hacks my wallet in the future, would this hacker be able to steal from users of my token?*
 
     No, if you follow our advice. The best practice is to deploy a token that even you can't control. This means that even if you make a mistake in the future and your personal wallet gets hacked, your token users will still be safe. The first thing we're doing is storing all token metadata (like name and ticker) on-chain. Some deployers host this info in a JSON file on an external URL. This is very dangerous because if somebody ever hacks the website that holds the JSON - they would be able to change the ticker and destroy the token. Storing the metadata on-chain guarantees that it could never change. Second, after you finish minting the initial supply of your token, we encourage you to revoke the admin account to prevent any future minting. This means that even if your deployer wallet gets hacked, the hacker will not be able to mint and harm your token users.
+
+# License
+MIT
