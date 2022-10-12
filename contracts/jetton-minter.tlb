@@ -16,3 +16,5 @@ burn_notification query_id:uint64 amount:VarUInteger 16 sender:MsgAddress respon
 change_admin#3 query_id:uint64 new_admin_address:MsgAddress = InternalMsgBody
 
 change_content#4 query_id:uint64 new_content:^Cell = InternalMsgBody
+
+provide_wallet_address query_id:uint64 owner_address:MsgAddress include_owner_address:Bool = InternalMsgBody
