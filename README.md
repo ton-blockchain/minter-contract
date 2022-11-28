@@ -89,7 +89,7 @@ This is much more complicated and will allow you to change the actual behavior o
  
   What about the Jetton Logo URI, if it's stored on a website, can't it change? Yes, it can change and this is a feature. We believe that logos can go through rebranding without putting users at risk. Satoshi Nakamoto didn't design the current logo of Bitcoin when he wrote the initial code.
 
-  I don't see the metadata in a wallet or block explorer, why? Many tools reused their NFT parsing code where metadata is much bigger and cannot be stored on-chain due to cost. Please open issues with these tools to fix and display on-chain metadata which is supported by the official standard.
+  I don't see the metadata in a wallet or block explorer, why? Some tools don't support yet the secure on-chain metadata standard. Please open issues with these tools to fix and display on-chain metadata which is supported by the official standard and is the secure way to publish Jettons.
 
 &nbsp;
 ## Protect yourself and your users
@@ -102,7 +102,7 @@ Don't forget that we're dealing with programmable money here. Jettons are tradab
     
  2. **Revoke admin role in the Jetton as soon as possible**
 
-    The Jetton code allows a special admin role (the deployer wallet address) to mint new tokens for themselves. This functionality is necessary for the initial launch because that's how new Jettons enter circulation. Once you're finished with minting you must revoke your admin permissions by changing the admin to an empty address. A blockchain ecosystem is designed to be trustless. You should never take responsibility for your users' funds, you don't want a misplaced key on your behalf to permit theft from other people! Revoking the admin role will guarantee that nobody will ever be able to mint new tokens in the future and crush your Jetton price.
+    The Jetton code allows a special admin role (the deployer wallet address) to mint new tokens for themselves and change token metadata. This functionality is necessary for the initial launch because that's how new Jettons enter circulation. Once you're finished with minting you must revoke your admin permissions by changing the admin to an empty address. A blockchain ecosystem is designed to be trustless. You should never take responsibility for your users' funds, you don't want a misplaced key on your behalf to permit theft from other people! Revoking the admin role will guarantee that nobody will ever be able to mint new tokens in the future and crush your Jetton price. Please only revoke after you finished doing QA and made sure all the metadata fields are correct! After revoking admin you will not be able to change any of the metadata fields anymore.
 
 ## Q&A: Is this contract deployer safe?
 
@@ -140,5 +140,33 @@ Yes! Contract deployers that look like this are the safest you can get. This is 
 
     No, if you follow our advice. The best practice is to deploy a token that even you can't control. This means that even if you make a mistake in the future and your personal wallet gets hacked, your token users will still be safe. The first thing we're doing is storing all token metadata (like name and ticker) on-chain. Some deployers host this info in a JSON file on an external URL. This is very dangerous because if somebody ever hacks the website that holds the JSON - they would be able to change the ticker and destroy the token. Storing the metadata on-chain guarantees that it could never change. Second, after you finish minting the initial supply of your token, we encourage you to revoke the admin account to prevent any future minting. This means that even if your deployer wallet gets hacked, the hacker will not be able to mint and harm your token users.
 
+&nbsp;
+## Troubleshooting
+
+1. *I didn't write down my new Jetton's contract address and forgot what it was!*
+
+    Don't worry, we can find your Jetton in a block explorer like tonscan.org. Open https://tonscan.org and go to the address page of the wallet you used to deploy the Jetton (this is the wallet that paid the 0.25 TON deploy fees). We assume that you minted some tokens to this address. In the explorer UI click on the tab named "JETTONS". This will now show you all the Jettons you hold, your new Jetton should be in the list. If you didn't mint any tokens, then just throw this Jetton away and deploy a new one.
+
+2. *I made a mistake with the metadata! I want to change one of the fields*
+
+    You can only change metadata fields until you revoke the admin role. If you didn't revoke the admin yet, open the minter UI and search for your Jetton by address. Once found, connect the wallet that you deployed with. You should have the ability to edit metadata fields in the UI. If you revoked the admin and must change one of the metadata fields due to a mistake, your best course of action is to throw this Jetton away and deploy a new one.
+    
+3. *Can there be multiple Jettons with the same metadata fields like name, logo and symbol?*
+
+    Yes! Anyone can deploy as many duplicate Jettons as they want with similar metadata. Every Jetton will be deployed on a different address. Jettons are not unique and are very easy to fake. To make sure you're working with the correct Jetton, always compare the address to the official address. If you deployed a Jetton and made a mistake that cannot be recovered, you can always deploy a new one and forget about the old.
+
+4. *I don't see my Jetton's image, it doesn't show!*
+
+    Your Jetton's logo URI is probably invalid. To make sure the URI is working, paste it in your browser. Make sure the URI is not a web page but the URI of the image directly. The URI should end with a .PNG or .JPG extension. If this is not the case, open the website in your browser, right click on the image and select "Copy Image Address". You should now have the correct URI in your clipboard.
+
+5. *My Jetton displays in some wallets/explorers but not in others*
+
+    Some wallets and some explorers don't support the latest standard of Jettons that store metadata securely on-chain. Wallets like TonKeeper and TonHub should be ok and explorers like tonscan.org should be ok. If your Jettons works well in these but doesn't show up in a different wallet/explorer, please open an issue for this developer and ask them to add support for Jettons storing metadata on-chain (this is part of the official standard).
+
+6. *I have a different problem and I don't know what to do*
+
+    We have a friendly community on Telegram that will be happy to help you. Visit https://t.me/ton_minter and ask for help.
+
+&nbsp;
 # License
 MIT
