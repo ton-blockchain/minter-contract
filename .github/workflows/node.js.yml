@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     strategy:
       matrix:
@@ -25,7 +25,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-      - run: mkdir bin && wget https://github.com/ton-defi-org/ton-binaries/releases/download/ubuntu-18-0.2.0/fift -P ./bin && chmod +x ./bin/fift && wget https://github.com/ton-defi-org/ton-binaries/releases/download/ubuntu-18-0.2.0/func -P ./bin && chmod +x ./bin/func && wget https://github.com/ton-defi-org/ton-binaries/releases/download/fiftlib/fiftlib.zip -P ./bin && unzip ./bin/fiftlib.zip -d ./bin/fiftlib
+      - run: sudo apt-get update && sudo apt-get install libssl-dev libssl1.0.0
+      - run: mkdir bin && wget https://github.com/ton-defi-org/ton-binaries/releases/download/ubuntu-18-0.2.0/fift -P ./bin && chmod +x ./bin/fift && wget https://github.com/ton-defi-org/ton-binaries/releases/download/ubuntu-18-0.2.0/func -P ./bin && chmod +x ./bin/func && wget https://github.com/ton-defi-org/ton-binaries/releases/download/ubuntu-18-0.2.0/fiftlib.zip -P ./bin && unzip ./bin/fiftlib.zip -d ./bin/fiftlib
       - run: npm ci
       - run: npm run build
       - run: npm test
